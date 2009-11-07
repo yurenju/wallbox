@@ -1,0 +1,81 @@
+#!/usr/bin/python -ttu
+# vim: ai ts=4 sts=4 et sw=4
+#
+# wallbox contains main().  
+# The starting point of the application
+#
+# Copyright (C) 2009, .
+#
+# Author: Yuren Ju <yurenju@gmail.com>
+# 
+# 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Library General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 
+# 02111-1307, USA.
+#
+
+import string
+import sys
+from wallbox_utils import printUserInfo
+
+from optparse import OptionParser
+
+PKGDATADIR = "@PKGDATADIR@"
+
+# TBD: how to document in python
+# SECTION:main
+# @short_description: Parses cmd-line. Runs simple console app.
+#
+# @see_also: #For more information, see <ulink role="online-location" 
+#             url="http://moblin.org">http://moblin.org</ulink>
+# @stability: Stable
+#
+# Parses command-line.  Starts sample console app.
+#
+def main():
+    if sys.hexversion < 0x2040000:
+        print >> sys.stderr, ("Error: %s depends on a Python version of " \
+                                  "at least 2.4!") % (sys.argv[0])
+        sys.exit(1)
+
+    print ("\nProgram: wallbox\n");
+    name = ""
+    age = -1
+    if len(sys.argv) > 1:
+        (options,args) = parseCommandLine()
+        name = options.name 
+        age = options.age   
+
+    while name == "":
+        name = raw_input ("Please enter your name: ")
+        name.strip()
+    while age <0 or age > 200:
+        try:
+            age = int(raw_input ("Please enter your age: "))
+        except ValueError:
+            continue
+    printUserInfo(name, age)
+    return 0
+
+def parseCommandLine():
+    parser = OptionParser()
+    parser.add_option("-n", "--name", dest="name", default="",    
+                      help="Your name")
+    parser.add_option("-a", "--age", type="int", dest="age", default=-1,
+                      help="Your age")
+    (options, args) = parser.parse_args()
+    return options, args
+
+if __name__ == '__main__':
+    sys.exit(main())

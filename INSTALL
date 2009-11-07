@@ -1,0 +1,12 @@
+
+Building:
+  $ ./autogen.sh  [--enable-gtk-doc] [--prefix=/usr]
+  $ make
+
+Installing:
+  $ sudo make install
+
+Running:
+  $ wallbox
+
+

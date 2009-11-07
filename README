@@ -1,0 +1,27 @@
+wallbox v0.1
+Copyright (C) 2009, .
+
+Brief description of project....
+
+-----------------------------------------------------------------------------
+ Build
+-----------------------------------------------------------------------------
+$ ./autogen.sh
+$ make
+
+-----------------------------------------------------------------------------
+ Build with documentation generated (usually for libraries)
+-----------------------------------------------------------------------------
+$ ./autogen.sh --enable-gtk-doc
+$ make
+
+( If built with the --enable-gtk-doc flag above you can view the index.html
+  file in your web browser. )
+$ firefox ./docs/reference/index.html
+
+-----------------------------------------------------------------------------
+ Install
+-----------------------------------------------------------------------------
+$ sudo make install
+
+

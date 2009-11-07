@@ -1,0 +1,75 @@
+AC_PREREQ(2.61)
+
+# package version number (not shared library version)
+# odd micro numbers indicate in-progress development
+# even micro numbers indicate released versions
+m4_define(wallbox_version_major, 0)
+m4_define(wallbox_version_minor, 1)
+m4_define(wallbox_version_micro, 0)
+
+m4_define([wallbox_version],
+          [wallbox_version_major.wallbox_version_minor.wallbox_version_micro])
+m4_define([wallbox_api_version],
+          [wallbox_version_major.wallbox_version_minor])
+
+#the name in AC_INIT is the project name and used in many
+# configure variables.  (e.g. pkgdatadir == /usr/share/<name>)
+AC_INIT(wallbox, wallbox_version)
+AM_INIT_AUTOMAKE(wallbox, wallbox_version)
+
+#Look for python version listed
+#AM_PATH_PYTHON(version,action-if-found,action-if-not-found)
+#e.g. AM_PATH_PYTHON([2.5.2],, [:])
+AM_PATH_PYTHON([2.5.2])
+
+# Checks for programs.
+AC_PROG_LIBTOOL
+AC_PROG_INSTALL
+
+# Checks for libraries.
+
+# Checks for typedefs, structures, & compiler characteristics
+
+# Checks for library functions.
+# AC_CHECK_FUNCS([memset])
+
+# enable pkg-config
+PKG_PROG_PKG_CONFIG
+
+# Check for function availability
+# AC_CHECK_FUNCS([memset])
+
+# all libraries listed are associated with "WALLBOX" tag
+#PKG_CHECK_MODULES(WALLBOX, glib-2.0)
+#AC_SUBST(WALLBOX_CFLAGS)
+#AC_SUBST(WALLBOX_LIBS)
+
+
+
+# i18n
+ALL_LINGUAS="en_US"
+AC_SUBST(ALL_LINGUAS)
+AM_GLIB_GNU_GETTEXT
+AC_DEFINE(GETTEXT_PACKAGE, ["wallbox"], [Package name for gettext])
+
+
+desktopentrydir=${datadir}/applications
+AC_SUBST(desktopentrydir)
+
+icondir=${datadir}/icons/hicolor/32x32/apps
+AC_SUBST(icondir)
+
+# Output files
+AC_OUTPUT([Makefile
+src/Makefile
+src/wallbox.desktop
+])
+
+echo ""
+echo "   wallbox $VERSION"
+echo "   ====================="
+echo "   Documentation: ${enable_gtk_doc}"
+echo ""
+echo "   To build the project, run \"make\""
+echo ""
+

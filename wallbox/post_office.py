@@ -49,7 +49,7 @@ class PostOffice (dbus.service.Object):
     def login (self):
         self.fb.auth.createToken ()
         self.fb.login ()
-        self.session = self.fb.getSession ()
+        self.session = self.fb.auth.getSession ()
         self.uid = fb.users.getInfo ([fb.uid])[0]['uid']
         self.office_status = WAITING_LOGIN
         self.user_ids.append (uid)

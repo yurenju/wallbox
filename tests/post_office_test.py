@@ -21,10 +21,13 @@ class TestDbusPostOffice (unittest.TestCase):
         self.office = dbus.Interface \
             (obj, "org.wallbox.PostOfficeInterface")
 
-        self.office.login ()
-        time.sleep (5)
+        if self.office.get_office_status () != 0:
+            self.office.login ()
 
     def test_get_notification (self):
+        time.sleep (3)
+        if self.office.get_office_status () == WAITING_LOGIN:
+            self.office.login_completed ()
         while self.office.get_office_status () != STANDBY:
             time.sleep (5)
 
@@ -33,6 +36,9 @@ class TestDbusPostOffice (unittest.TestCase):
             self.assert_ ("test" in n['body_text'])
 
     def test_post_status (self):
+        time.sleep (3)
+        if self.office.get_office_status () == WAITING_LOGIN:
+            self.office.login_completed ()
         text1 = "post test status"
         self.office.post_status (text)
         self.office.refresh ()
@@ -41,6 +47,9 @@ class TestDbusPostOffice (unittest.TestCase):
         self.assert_ (text1 == status['message'])
 
     def test_comment (self):
+        time.sleep (3)
+        if self.office.get_office_status () == WAITING_LOGIN:
+            self.office.login_completed ()
         text1 = "post test comment"
 
         status = self.office.get_current_status ()

@@ -1,8 +1,15 @@
 #!/usr/bin/env python
+
 import unittest
 import dbus
-import wallbox
 import time
+import sys
+import os
+
+STANDBY = 0
+LOADING = 1
+WAITING_LOGIN = 2
+NO_LOGIN = 3
 
 class TestDbusPostOffice (unittest.TestCase):
     def setUp (self):
@@ -14,18 +21,18 @@ class TestDbusPostOffice (unittest.TestCase):
         self.office = dbus.Interface \
             (obj, "org.wallbox.PostOfficeInterface")
 
-        self.login ()
+        self.office.login ()
         time.sleep (5)
 
-    def get_notification_test (self):
-        while self.office.get_office_status () != wallbox.STANDBY:
+    def test_get_notification (self):
+        while self.office.get_office_status () != STANDBY:
             time.sleep (5)
 
         ns = self.office.get_notification ()
         for n in ns:
             self.assert_ ("test" in n['body_text'])
 
-    def post_status_test (self):
+    def test_post_status (self):
         text1 = "post test status"
         self.office.post_status (text)
         self.office.refresh ()
@@ -33,7 +40,7 @@ class TestDbusPostOffice (unittest.TestCase):
         status = self.get_current_status ()
         self.assert_ (text1 == status['message'])
 
-    def comment_test (self):
+    def test_comment (self):
         text1 = "post test comment"
 
         status = self.office.get_current_status ()

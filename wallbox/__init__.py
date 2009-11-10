@@ -10,6 +10,8 @@ import os
 import urllib
 import urlparse
 import time
+import re
+import datetime
 
 __author__ = 'Yuren Ju <yurenju@gmail.com>'
 
@@ -17,6 +19,7 @@ IS_LOGIN = 0
 LOADING = 1
 WAITING_LOGIN = 2
 NO_LOGIN = 3
+STANDBY = 4
 
 class PostOffice (dbus.service.Object):
     def __init__ (self, bus_name, bus_path):
@@ -89,12 +92,16 @@ class PostOffice (dbus.service.Object):
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='')
     def refresh (self):
-        self.get_remote_current_status (self)
-        self.get_remote_notification (self)
-        self.get_remote_comments (self)
-        self.get_remote_users_icon (self)
-        self.get_remote_applications_icon (self)
-        self.update_timestamp (self)
+        self.get_remote_current_status ()
+        self.get_remote_notification ()
+        self.get_remote_comments ()
+        self.get_remote_users_icon ()
+        self.get_remote_applications_icon ()
+        self.updated_timestamp = datetime.date.today ()
+
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='')
+    def post_status (self, text):
+        self.fb.users.setStatus (status=[text], clear=[False], uid=self.uid)
 
     def get_ext_perm (self):
         ext_perm_url = "http://www.facebook.com/" + \
@@ -106,7 +113,11 @@ class PostOffice (dbus.service.Object):
         webbrowser.open (ext_perm_url)
 
     def get_remote_current_status (self):
-        status = self.fb.status.get (limit=1)
+        status = \
+            self.fb.fql.query \
+            ("SELECT uid, status_id, message, source FROM status WHERE uid='%s' LIMIT 1" % \
+            self.uid)
+
         self.current_status = status
 
     def get_remote_notification (self):
@@ -123,7 +134,7 @@ class PostOffice (dbus.service.Object):
             if n['app_id'] == 2719290516L:
                 #get post_id
                 post_id = None
-                m = pattern.search (msg['href'])
+                m = pattern.search (n['href'])
                 if m != None:
                     post_id = "%s_%s" % (m.group (1), m.group (2))
                 self.status[post_id] = {}
@@ -138,8 +149,8 @@ class PostOffice (dbus.service.Object):
         for n in self.notification:
             if not n['sender_id'] in self.user_ids:
                 self.user_ids.append (n['sender_id'])
-        for s in self.status:
-            for c in s['comments']:
+        for skey in self.status:
+            for c in self.status[skey]['comments']:
                 if not c['fromid'] in self.user_ids:
                     self.user_ids.append (c['fromid'])
         self.users = \

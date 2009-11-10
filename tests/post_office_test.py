@@ -6,10 +6,11 @@ import time
 import sys
 import os
 
-STANDBY = 0
+IS_LOGIN = 0
 LOADING = 1
 WAITING_LOGIN = 2
 NO_LOGIN = 3
+STANDBY = 4
 
 class TestDbusPostOffice (unittest.TestCase):
     def setUp (self):
@@ -21,13 +22,15 @@ class TestDbusPostOffice (unittest.TestCase):
         self.office = dbus.Interface \
             (obj, "org.wallbox.PostOfficeInterface")
 
-        if self.office.get_office_status () != 0:
+        if self.office.get_office_status () == NO_LOGIN:
             self.office.login ()
 
     def test_get_notification (self):
         time.sleep (3)
         if self.office.get_office_status () == WAITING_LOGIN:
             self.office.login_completed ()
+        self.office.refresh ()
+        time.sleep (10)
         while self.office.get_office_status () != STANDBY:
             time.sleep (5)
 
@@ -40,7 +43,7 @@ class TestDbusPostOffice (unittest.TestCase):
         if self.office.get_office_status () == WAITING_LOGIN:
             self.office.login_completed ()
         text1 = "post test status"
-        self.office.post_status (text)
+        self.office.post_status (text1)
         self.office.refresh ()
         self.sleep (5)
         status = self.get_current_status ()

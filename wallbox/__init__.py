@@ -70,7 +70,7 @@ class PostOffice (dbus.service.Object):
         self.user_ids.append (self.uid)
         self.office_status = IS_LOGIN
 
-    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='v')
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='a(a{sv})')
     def get_notification (self):
         return self.notification
 
@@ -92,12 +92,19 @@ class PostOffice (dbus.service.Object):
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='')
     def refresh (self):
+        print "refresh start"
         self.get_remote_current_status ()
+        print "get remote current status"
         self.get_remote_notification ()
+        print "get remote notification"
         self.get_remote_comments ()
-        self.get_remote_users_icon ()
-        self.get_remote_applications_icon ()
+        print "get remote comments"
+        #self.get_remote_users_icon ()
+        print "get remote users icon"
+        #self.get_remote_applications_icon ()
+        print "get remote applications icon"
         self.updated_timestamp = datetime.date.today ()
+        print "updated finish"
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='')
     def post_status (self, text):

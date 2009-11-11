@@ -31,13 +31,12 @@ class TestDbusPostOffice (unittest.TestCase):
             self.office.login_completed ()
         self.office.refresh ()
         time.sleep (10)
-        while self.office.get_office_status () != STANDBY:
-            time.sleep (5)
 
         ns = self.office.get_notification ()
         for n in ns:
             self.assert_ ("test" in n['body_text'])
 
+'''
     def test_post_status (self):
         time.sleep (3)
         if self.office.get_office_status () == WAITING_LOGIN:
@@ -65,6 +64,6 @@ class TestDbusPostOffice (unittest.TestCase):
         comments = self.office.get_comments (post_id)
         c = comments.pop ()
         self.assert_ (c['text'] == text1)
-
+'''
 if __name__ == "__main__":
     unittest.main ()

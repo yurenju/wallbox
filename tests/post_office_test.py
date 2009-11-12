@@ -5,6 +5,8 @@ import dbus
 import time
 import sys
 import os
+import dbus.mainloop.glib
+import random
 
 IS_LOGIN = 0
 LOADING = 1
@@ -25,45 +27,59 @@ class TestDbusPostOffice (unittest.TestCase):
         if self.office.get_office_status () == NO_LOGIN:
             self.office.login ()
 
+    def refresh_reply_handler (self):
+        pass
+    def refresh_error_handler (self, e):
+        pass
+
     def test_get_notification (self):
         time.sleep (3)
         if self.office.get_office_status () == WAITING_LOGIN:
             self.office.login_completed ()
-        self.office.refresh ()
+        self.office.refresh (reply_handler=self.refresh_reply_handler, \
+                            error_handler=self.refresh_error_handler)
         time.sleep (10)
 
-        ns = self.office.get_notification ()
+        ns = self.office.get_notification_list ()
         for n in ns:
-            self.assert_ ("test" in n['body_text'])
+            entry = self.office.get_notification_entry (n)
+            self.assert_ ("test" in entry['body_text'])
 
-'''
     def test_post_status (self):
         time.sleep (3)
         if self.office.get_office_status () == WAITING_LOGIN:
             self.office.login_completed ()
-        text1 = "post test status"
+        text1 = "post test status %d" % random.randrange (100) 
         self.office.post_status (text1)
-        self.office.refresh ()
-        self.sleep (5)
-        status = self.get_current_status ()
-        self.assert_ (text1 == status['message'])
+        self.office.refresh (reply_handler=self.refresh_reply_handler, \
+                            error_handler=self.refresh_error_handler)
+        time.sleep (10)
+        status = self.office.get_current_status ()
+        self.assert_ (text1 in status['message'])
 
     def test_comment (self):
         time.sleep (3)
         if self.office.get_office_status () == WAITING_LOGIN:
             self.office.login_completed ()
-        text1 = "post test comment"
+        text1 = "post test comment %d" % random.randrange (100)
 
+        self.office.refresh (reply_handler=self.refresh_reply_handler, \
+                            error_handler=self.refresh_error_handler)
+        time.sleep (10)
         status = self.office.get_current_status ()
         post_id = "%d_%s" % (status['uid'], status['status_id'])
 
-        self.office.post_comment (post_id)
-        time.sleep (5)
+        self.office.post_comment (post_id, text1)
+        self.office.refresh (reply_handler=self.refresh_reply_handler, \
+                            error_handler=self.refresh_error_handler)
+        time.sleep (10)
         status = self.office.get_current_status ()
-
-        comments = self.office.get_comments (post_id)
-        c = comments.pop ()
+        comments_list = self.office.get_comments_list (post_id)
+        xid = comments_list.pop ()
+        c = self.office.get_comment_entry (post_id, xid)
+        print c['text']
         self.assert_ (c['text'] == text1)
-'''
+
 if __name__ == "__main__":
+    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     unittest.main ()

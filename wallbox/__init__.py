@@ -70,9 +70,18 @@ class PostOffice (dbus.service.Object):
         self.user_ids.append (self.uid)
         self.office_status = IS_LOGIN
 
-    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='a(a{sv})')
-    def get_notification (self):
-        return self.notification
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='ai')
+    def get_notification_list (self):
+        nlist = []
+        for n in self.notification:
+            nlist.append (int (n['notification_id']))
+        return nlist
+
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='i', out_signature='a{sv}')
+    def get_notification_entry (self, notification_id):
+        for n in self.notification:
+            if int (n['notification_id']) == notification_id:
+                return n
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='ss', out_signature='')
     def post_comment (self, post_id, comment):
@@ -86,9 +95,21 @@ class PostOffice (dbus.service.Object):
     def set_refresh_interval (self, interval):
         self.refresh_interval = interval
 
-    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='')
-    def get_comments (self, post_id):
-        return self.status[post_id]
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='as')
+    def get_comments_list (self, post_id):
+        clist = []
+        for c in self.status[post_id]['comments']:
+            clist.append (c['xid'])
+        print self.status[post_id]['comments']
+        return clist
+
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='ss', out_signature='a{sv}')
+    def get_comment_entry (self, post_id, xid):
+        comments = self.status[post_id]['comments']
+        for c in comments:
+            if c['xid'] == xid:
+                return c
+        return {}
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='')
     def refresh (self):
@@ -99,16 +120,22 @@ class PostOffice (dbus.service.Object):
         print "get remote notification"
         self.get_remote_comments ()
         print "get remote comments"
-        #self.get_remote_users_icon ()
+        self.get_remote_users_icon ()
         print "get remote users icon"
-        #self.get_remote_applications_icon ()
+        self.get_remote_applications_icon ()
         print "get remote applications icon"
         self.updated_timestamp = datetime.date.today ()
         print "updated finish"
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='')
     def post_status (self, text):
-        self.fb.users.setStatus (status=[text], clear=[False], uid=self.uid)
+        self.fb.users.setStatus (status=text, clear=False, status_includes_verb=False, uid=self.uid)
+
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='a{sv}')
+    def get_current_status (self):
+        print "get current status"
+        print self.current_status
+        return self.current_status
 
     def get_ext_perm (self):
         ext_perm_url = "http://www.facebook.com/" + \
@@ -125,15 +152,21 @@ class PostOffice (dbus.service.Object):
             ("SELECT uid, status_id, message, source FROM status WHERE uid='%s' LIMIT 1" % \
             self.uid)
 
-        self.current_status = status
+        self.current_status = status[0]
 
     def get_remote_notification (self):
         notification = self.fb.fql.query \
-            ("SELECT title_text, body_text, is_unread, " + \
+            ("SELECT notification_id, title_text, body_text, is_unread, " + \
             "is_hidden, href, app_id, sender_id " + \
             "FROM notification WHERE recipient_id = '%d' LIMIT %d" % \
             (self.uid, self.notification_num))
         self.notification = notification
+
+    def _dump_comments (self, post_id):
+        print "status: %s" % self.status[post_id]['message']
+        print "comments:"
+        for c in self.status[post_id]['comments']:
+            print "\t%s" % c['text']
 
     def get_remote_comments (self):
         pattern = re.compile ("id=(\d+).*story_fbid=(\d+)")
@@ -147,10 +180,21 @@ class PostOffice (dbus.service.Object):
                 self.status[post_id] = {}
                 self.status[post_id]['message'] = n['body_text']
                 comments = self.fb.fql.query \
-                    ("SELECT fromid, text FROM comment WHERE post_id='%s'" \
+                    ("SELECT xid, fromid, text FROM comment WHERE post_id='%s'" \
                     % post_id)
 
                 self.status[post_id]['comments'] = comments
+                self._dump_comments (post_id)
+
+        current_post_id = "%s_%s" % (self.current_status['uid'], self.current_status['status_id'])
+        self.status[current_post_id] = {}
+        self.status[current_post_id]['message'] = self.current_status['message']
+        comments = self.fb.fql.query \
+            ("SELECT xid, fromid, text FROM comment WHERE post_id='%s'" \
+            % current_post_id)
+
+        self.status[current_post_id]['comments'] = comments
+        self._dump_comments (current_post_id)
 
     def get_remote_users_icon (self):
         for n in self.notification:

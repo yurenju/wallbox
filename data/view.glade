@@ -1,0 +1,144 @@
+<?xml version="1.0"?>
+<interface>
+  <requires lib="gtk+" version="2.16"/>
+  <!-- interface-naming-policy project-wide -->
+  <object class="GtkAssistant" id="wizard_welcome">
+    <property name="border_width">12</property>
+    <property name="title" translatable="yes">First run wizard</property>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <object class="GtkLabel" id="label_welcome">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes">welcome to &lt;b&gt;wallbox&lt;/b&gt; facebook notification. you need active application and get extra permession for &lt;b&gt;wallbox&lt;/b&gt;.
+
+please press Forward to active application.
+</property>
+        <property name="use_markup">True</property>
+        <property name="wrap">True</property>
+      </object>
+      <packing>
+        <property name="page_type">intro</property>
+        <property name="title" translatable="yes">Welcome</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkVBox" id="vbox_active">
+        <property name="visible">True</property>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkLabel" id="label_active">
+            <property name="visible">True</property>
+            <property name="label" translatable="yes">before use wallbox, you need active wallbox in your facebook account. please press &lt;b&gt;Active wallbox&lt;/b&gt;.</property>
+            <property name="use_markup">True</property>
+            <property name="wrap">True</property>
+          </object>
+          <packing>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkHBox" id="hbox_active">
+            <property name="visible">True</property>
+            <child>
+              <object class="GtkButton" id="button_active">
+                <property name="label" translatable="yes">Active wallbox</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal name="clicked" handler="on_button_active_clicked"/>
+              </object>
+              <packing>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="title" translatable="yes">Active Application</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkVBox" id="vbox_extra_perm">
+        <property name="visible">True</property>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkLabel" id="label_extra_perm">
+            <property name="visible">True</property>
+            <property name="label" translatable="yes">wallbox need to get extra permession to post comment. please press &lt;b&gt;get extra permession&lt;/b&gt;.
+
+after get extra permession on facebook, please press Forward.</property>
+            <property name="use_markup">True</property>
+            <property name="wrap">True</property>
+          </object>
+          <packing>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkHBox" id="hbox_extra_perm">
+            <property name="visible">True</property>
+            <child>
+              <object class="GtkButton" id="button_extra_perm">
+                <property name="label" translatable="yes">get extra permession</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal name="clicked" handler="on_button_extra_perm_clicked"/>
+              </object>
+              <packing>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="title" translatable="yes">Get Extra Permession</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkVBox" id="vbox_finish">
+        <property name="visible">True</property>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkLabel" id="label_finish">
+            <property name="visible">True</property>
+            <property name="yalign">0.4699999988079071</property>
+            <property name="label" translatable="yes">All prepare work finish! please Finish to use wallbox</property>
+          </object>
+          <packing>
+            <property name="position">0</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="page_type">confirm</property>
+        <property name="title" translatable="yes">Finish</property>
+      </packing>
+    </child>
+  </object>
+</interface>

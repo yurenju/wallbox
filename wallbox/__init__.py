@@ -64,6 +64,15 @@ class PostOffice (dbus.service.Object):
         self.office_status = WAITING_LOGIN
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='')
+    def get_ext_perm (self):
+        ext_perm_url = "http://www.facebook.com/" + \
+            "connect/prompt_permissions.php" + \
+            "?api_key=%s&fbconnect=true&v=1.0&display=popup" % self.api_key + \
+            "&extern=1&ext_perm=publish_stream" 
+        import webbrowser
+        webbrowser.open (ext_perm_url)
+
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='')
     def login_completed (self):
         self.session = self.fb.auth.getSession ()
         self.uid = self.fb.users.getInfo ([self.fb.uid])[0]['uid']
@@ -137,14 +146,6 @@ class PostOffice (dbus.service.Object):
         print self.current_status
         return self.current_status
 
-    def get_ext_perm (self):
-        ext_perm_url = "http://www.facebook.com/" + \
-            "connect/prompt_permissions.php" + \
-            "?api_key=%s&fbconnect=true&v=1.0&display=popup" + \
-            "&extern=1&ext_perm=publish_stream" % \
-            self.api_key
-        import webbrowser
-        webbrowser.open (ext_perm_url)
 
     def get_remote_current_status (self):
         status = \

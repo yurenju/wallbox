@@ -23,21 +23,26 @@ class Wizard:
         self.office = dbus.Interface \
             (obj, "org.wallbox.PostOfficeInterface")
 
-    def on_button_extra_perm_clicked (self, widget, data=None):
-        print "extra perm"
-
-    def on_button_active_clicked (self, widget, data=None):
-        self.office.login ()
-        hbox = self.builder.get_object ("hbox_active")
-        hbox.remove (widget)
+    def show_continue_button (self, remove_widget, page_index, box_name):
+        hbox = self.builder.get_object (box_name)
+        hbox.remove (remove_widget)
         continue_button = gtk.Button ("Continue")
         hbox.pack_start (continue_button, True, False, 0)
         continue_button.show ()
-        continue_button.connect ("clicked", self.on_button_continue_clicked, None)
+        self.continue_id = continue_button.connect ("clicked", self.on_button_continue_clicked, page_index)
+
+    def on_button_extra_perm_clicked (self, widget, data=None):
+        self.office.get_ext_perm ()
+        self.show_continue_button (widget, 2, "hbox_extra_perm")
+
+    def on_button_active_clicked (self, widget, data=None):
+        self.office.login ()
+        self.show_continue_button (widget, 1, "hbox_active")
 
     def on_button_continue_clicked (self, widget, data=None):
-        self.assistant.set_page_complete (self.assistant.get_nth_page (1), True)
-        self.assistant.set_current_page (2)
+        self.assistant.set_page_complete (self.assistant.get_nth_page (int (data)), True)
+        self.assistant.set_current_page (int(data)+1)
+        widget.disconnect (self.continue_id)
 
     
 

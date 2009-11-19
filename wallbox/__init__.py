@@ -32,20 +32,12 @@ class PostOffice (dbus.service.Object):
         self.notification_num = 5
         self.refresh_interval = 5
         self.notification = []
-        self.api_key = '54b855c6ea87048447e76bdae2cef007'
+        self.api_key = '9103981b8f62c7dbede9757113372240'
         self.office_status = NO_LOGIN
         self.prepare_directories ()
 
-        #social contact auth
-        self.fb = facebook.Facebook \
-            (self.api_key, \
-            '8f9ed80bb60b3e8efae2efb48e07bb96')
         # wallbox auth
-        '''
-        self.fb = facebook.Facebook \
-            ('9103981b8f62c7dbede9757113372240', \
-            'eba250ae124ceaba837fc2f72709fb9f')
-        '''
+        self.fb = facebook.Facebook (self.api_key, '')
 
         try:
             dbus.service.Object.__init__ (self, bus_name, bus_path)

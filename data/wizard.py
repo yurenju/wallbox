@@ -8,7 +8,7 @@ import dbus
 class Wizard:
     def __init__ (self):
         self.builder = gtk.Builder ()
-        self.builder.add_from_file ("view.glade")
+        self.builder.add_from_file ("wizard.glade")
         self.assistant = self.builder.get_object ("wizard_welcome")
         self.assistant.set_page_complete (self.assistant.get_nth_page (0), True)
         self.assistant.set_page_complete (self.assistant.get_nth_page (3), True)

@@ -12,6 +12,7 @@ import urlparse
 import time
 import re
 import datetime
+import secert
 
 __author__ = 'Yuren Ju <yurenju@gmail.com>'
 
@@ -37,7 +38,7 @@ class PostOffice (dbus.service.Object):
         self.prepare_directories ()
 
         # wallbox auth
-        self.fb = facebook.Facebook (self.api_key, '')
+        self.fb = facebook.Facebook (self.api_key, secert.key)
 
         try:
             dbus.service.Object.__init__ (self, bus_name, bus_path)

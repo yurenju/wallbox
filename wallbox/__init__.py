@@ -26,6 +26,7 @@ class PostOffice (dbus.service.Object):
     def __init__ (self, bus_name, bus_path):
         self.current_status = None
         self.app_ids = []
+        self.applications = {}
         self.user_ids = []
         self.users = []
         self.status = {}
@@ -139,6 +140,13 @@ class PostOffice (dbus.service.Object):
         print self.current_status
         return self.current_status
 
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='a{sv}')
+    def get_application (self, app_id):
+        return self.applications[int (app_id)]
+
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='s')
+    def get_app_icons_dir (self):
+        return self.app_icons_dir
 
     def get_remote_current_status (self):
         status = \
@@ -226,6 +234,7 @@ class PostOffice (dbus.service.Object):
                 
             urllib.urlretrieve \
                 (app['icon_url'], "%s/%s" % (self.app_icons_dir, icon_name))
+            self.applications[app_id] = {'icon_name': icon_name}
 
     def prepare_directories (self):
         self.user_icons_dir = \

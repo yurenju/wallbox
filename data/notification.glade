@@ -4,8 +4,8 @@
   <!-- interface-naming-policy project-wide -->
   <object class="GtkListStore" id="list_notification">
     <columns>
-      <!-- column-name app_icon -->
-      <column type="GdkPixbuf"/>
+      <!-- column-name app_id -->
+      <column type="gchararray"/>
       <!-- column-name text -->
       <column type="gchararray"/>
       <!-- column-name has_detail -->

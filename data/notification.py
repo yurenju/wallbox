@@ -26,6 +26,7 @@ class NotificationView:
 
     def init_view (self):
         self.treeview = self.builder.get_object ("treeview_notification")
+        self.treeview.set_hover_selection (True)
         self.icon_column = gtk.TreeViewColumn ("icon")
         self.text_column = gtk.TreeViewColumn ("text")
         self.arrow_column = gtk.TreeViewColumn ("arrow")
@@ -35,6 +36,9 @@ class NotificationView:
         self.icon_cell = gtk.CellRendererPixbuf ()
         self.text_cell = gtk.CellRendererText ()
         self.arrow_cell = gtk.CellRendererText ()
+
+        self.icon_cell.set_property ("yalign", 0.0)
+        self.text_cell.set_property ("wrap-width", 150)
 
         self.icon_column.pack_start (self.icon_cell, False)
         self.text_column.pack_start (self.text_cell, True)
@@ -59,6 +63,9 @@ class NotificationView:
         cell.set_property ('text', arrow)
 
     def refresh_reply_cb (self):
+        label = self.builder.get_object ("label_current_status")
+        status = self.office.get_current_status ()
+        label.set_text (status['message'])
         nlist = self.office.get_notification_list ()
         liststore = self.builder.get_object ("list_notification")
         for nid in nlist:

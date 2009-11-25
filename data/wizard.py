@@ -49,6 +49,9 @@ class Wizard:
         self.assistant.set_page_complete \
             (self.assistant.get_nth_page (int (data)), True)
 
+        if int (data) == 1:
+            self.office.login_completed ()
+
         self.assistant.set_current_page (int(data)+1)
         widget.disconnect (self.continue_id)
 

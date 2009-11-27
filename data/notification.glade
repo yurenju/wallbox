@@ -65,6 +65,8 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="model">list_notification</property>
+            <property name="headers_visible">False</property>
+            <property name="hover_selection">True</property>
           </object>
           <packing>
             <property name="position">2</property>

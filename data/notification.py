@@ -11,6 +11,7 @@ class NotificationView:
         self.builder = gtk.Builder ()
         self.builder.add_from_file ("notification.glade")
         self.window = self.builder.get_object ("notification_window")
+        self.window.connect ("configure-event", self.on_window_resize)
         self.window.show ()
 
         bus = dbus.SessionBus ()
@@ -21,18 +22,20 @@ class NotificationView:
             (obj, "org.wallbox.PostOfficeInterface")
 
         self.init_view ()
+        #self.refresh_reply_cb ()
         self.office.refresh (reply_handler=self.refresh_reply_cb, \
                             error_handler=self.refresh_error_cb)
 
+    def on_window_resize (self, widget, event, data=None):
+        print "resize"
+        x = self.window.get_size ()[0]
+        print x
+        self.text_cell.set_property ("wrap-width", x - 30)
+
     def init_view (self):
         self.treeview = self.builder.get_object ("treeview_notification")
-        self.treeview.set_hover_selection (True)
-        self.icon_column = gtk.TreeViewColumn ("icon")
-        self.text_column = gtk.TreeViewColumn ("text")
-        self.arrow_column = gtk.TreeViewColumn ("arrow")
-        self.treeview.append_column (self.icon_column)
-        self.treeview.append_column (self.text_column)
-        self.treeview.append_column (self.arrow_column)
+        self.column = gtk.TreeViewColumn ("icon")
+        self.treeview.append_column (self.column)
         self.icon_cell = gtk.CellRendererPixbuf ()
         self.text_cell = gtk.CellRendererText ()
         self.arrow_cell = gtk.CellRendererText ()
@@ -40,13 +43,13 @@ class NotificationView:
         self.icon_cell.set_property ("yalign", 0.0)
         self.text_cell.set_property ("wrap-width", 150)
 
-        self.icon_column.pack_start (self.icon_cell, False)
-        self.text_column.pack_start (self.text_cell, True)
-        self.arrow_column.pack_start (self.arrow_cell, False)
+        self.column.pack_start (self.icon_cell, False)
+        self.column.pack_start (self.text_cell, True)
+        self.column.pack_start (self.arrow_cell, False)
 
-        self.icon_column.set_cell_data_func (self.icon_cell, self.make_icon)
-        self.text_column.set_attributes (self.text_cell, text=1)
-        self.arrow_column.set_cell_data_func (self.arrow_cell, self.make_arrow)
+        self.column.set_cell_data_func (self.icon_cell, self.make_icon)
+        self.column.set_attributes (self.text_cell, text=1)
+        self.column.set_cell_data_func (self.arrow_cell, self.make_arrow)
 
     def make_icon (self, column, cell, model, iter):
         app_id = model.get_value (iter, 0)
@@ -71,11 +74,15 @@ class NotificationView:
         for nid in nlist:
             entry = self.office.get_notification_entry (nid)
             text = None
+            has_detail = False
             if len (entry['body_text']) == 0:
                 text = entry['title_text']
             else:
                 text = entry['body_text']
-            liststore.append ([entry['app_id'], text, True])
+
+            if int (entry['app_id']) == 19675640871:
+                has_detail = True
+            liststore.append ([entry['app_id'], text, has_detail])
 
     def refresh_error_cb (self, e):
         print e

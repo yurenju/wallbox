@@ -27,10 +27,8 @@ class NotificationView:
                             error_handler=self.refresh_error_cb)
 
     def on_window_resize (self, widget, event, data=None):
-        print "resize"
         x = self.window.get_size ()[0]
-        print x
-        self.text_cell.set_property ("wrap-width", x - 30)
+        self.text_cell.set_property ("wrap-width", x - 50)
 
     def init_view (self):
         self.treeview = self.builder.get_object ("treeview_notification")
@@ -40,8 +38,9 @@ class NotificationView:
         self.text_cell = gtk.CellRendererText ()
         self.arrow_cell = gtk.CellRendererText ()
 
-        self.icon_cell.set_property ("yalign", 0.0)
+        self.icon_cell.set_property ("yalign", 0.1)
         self.text_cell.set_property ("wrap-width", 150)
+        self.text_cell.set_property ("yalign", 0.1)
 
         self.column.pack_start (self.icon_cell, False)
         self.column.pack_start (self.text_cell, True)
@@ -69,6 +68,11 @@ class NotificationView:
         label = self.builder.get_object ("label_current_status")
         status = self.office.get_current_status ()
         label.set_text (status['message'])
+        user = self.office.get_current_user ()
+        pic_square = self.builder.get_object ("image_pic_square")
+        user_icon_path = self.office.get_user_icons_dir ()
+        pic_square.set_from_file (user_icon_path + '/' + user['pic_square_local'])
+
         nlist = self.office.get_notification_list ()
         liststore = self.builder.get_object ("list_notification")
         for nid in nlist:

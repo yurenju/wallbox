@@ -5,9 +5,11 @@ pygtk.require ("2.0")
 import gtk
 import dbus
 import dbus.mainloop.glib
+import comment
 
 class Notification:
     def __init__ (self):
+        self.comment = None
         self.builder = gtk.Builder ()
         self.builder.add_from_file ("notification.glade")
         self.window = self.builder.get_object ("notification_window")
@@ -30,8 +32,30 @@ class Notification:
         x = self.window.get_size ()[0]
         self.text_cell.set_property ("wrap-width", x - 50)
 
+    def on_notification_changed (self, sel):
+        list, it=sel.get_selected()
+        if it == None:
+            return
+        nid = list.get (it, 3)[0]
+        has_detail = list.get (it, 2)[0]
+        print nid
+        print has_detail
+        if has_detail:
+            if self.comment != None:
+                self.comment.window.destroy ()
+            status = self.office.get_status_with_nid (nid)
+            print status
+            if status != {}:
+                print status
+                self.comment = comment.Comment ("%s_%s" % (status['uid'], status['status_id']))
+        else:
+            if self.comment != None:
+                self.comment.window.destroy ()
+
     def init_view (self):
         self.treeview = self.builder.get_object ("treeview_notification")
+        selection = self.treeview.get_selection ()
+        selection.connect ("changed", self.on_notification_changed)
         self.column = gtk.TreeViewColumn ("icon")
         self.treeview.append_column (self.column)
         self.icon_cell = gtk.CellRendererPixbuf ()
@@ -86,7 +110,7 @@ class Notification:
 
             if int (entry['app_id']) == 19675640871:
                 has_detail = True
-            liststore.append ([entry['app_id'], text, has_detail])
+            liststore.append ([entry['app_id'], text, has_detail, int(entry['notification_id'])])
 
     def refresh_error_cb (self, e):
         print e

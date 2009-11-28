@@ -10,6 +10,8 @@
       <column type="gchararray"/>
       <!-- column-name has_detail -->
       <column type="gboolean"/>
+      <!-- column-name notification_id -->
+      <column type="gint"/>
     </columns>
   </object>
   <object class="GtkWindow" id="notification_window">

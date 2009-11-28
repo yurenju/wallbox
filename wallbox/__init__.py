@@ -31,7 +31,7 @@ class PostOffice (dbus.service.Object):
         self.users = []
         self.status = {}
         self.updated_timestamp = None
-        self.notification_num = 10
+        self.notification_num = 5
         self.refresh_interval = 5
         self.notification = []
         self.api_key = '9103981b8f62c7dbede9757113372240'
@@ -149,6 +149,19 @@ class PostOffice (dbus.service.Object):
             del result['comments']
         return result
 
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='i', out_signature='a{sv}')
+    def get_status_with_nid (self, nid):
+        result = None
+        for key in self.status:
+            print self.status[key]
+            if self.status[key].has_key ('notification_id') and \
+                self.status[key]['notification_id'] == nid:
+                result = self.status[key].copy ()
+                del result ['comments']
+                return result
+        return {}
+    
+
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='a{sv}')
     def get_application (self, app_id):
         return self.applications[int (app_id)]
@@ -211,7 +224,7 @@ class PostOffice (dbus.service.Object):
                     post_id = "%s_%s" % (id, status_id)
                     self.status[post_id] = {}
                     self.status[post_id] = self.fb.fql.query \
-                        ("SELECT uid, time, message FROM status " + \
+                        ("SELECT uid, time, message, status_id FROM status " + \
                         "WHERE uid = %s AND status_id = %s LIMIT 1" % \
                         (id, status_id))[0]
 
@@ -221,7 +234,9 @@ class PostOffice (dbus.service.Object):
 
                     self.status[post_id]['comments'] = comments
                     self._dump_comments (post_id)
+                    self.status[post_id]['notification_id'] = int (n['notification_id'])
 
+        '''
         current_post_id = "%s_%s" % (self.current_status['uid'], self.current_status['status_id'])
         self.status[current_post_id] = {}
         self.status[current_post_id]['message'] = self.current_status['message']
@@ -231,6 +246,8 @@ class PostOffice (dbus.service.Object):
 
         self.status[current_post_id]['comments'] = comments
         self._dump_comments (current_post_id)
+        self.status[post_id]['notification_id'] = int (n['notification_id'])
+        '''
 
     def get_remote_users_icon (self):
         for n in self.notification:

@@ -6,7 +6,7 @@ import gtk
 import dbus
 import dbus.mainloop.glib
 
-class NotificationView:
+class Notification:
     def __init__ (self):
         self.builder = gtk.Builder ()
         self.builder.add_from_file ("notification.glade")
@@ -94,6 +94,6 @@ class NotificationView:
 
 if __name__ == "__main__":
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-    n = NotificationView ()
+    n = Notification ()
     gtk.main ()
 

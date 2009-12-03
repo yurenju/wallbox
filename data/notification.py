@@ -37,6 +37,9 @@ class Notification:
         self.text_cell.set_property ("wrap-width", x - 50)
 
     def on_notification_changed (self, sel):
+        rect = self.treeview.get_allocation ()
+        candidate_x = int (rect.x + rect.width - 10)
+        candidate_y = int (self.cursor_y - 50)
         list, it=sel.get_selected()
         if it == None:
             return
@@ -51,13 +54,23 @@ class Notification:
             print status
             if status != {}:
                 print status
-                self.comment = comment.Comment ("%s_%s" % (status['uid'], status['status_id']))
+                self.comment = \
+                    comment.Comment \
+                    ("%s_%s" % (status['uid'], status['status_id']))
+                self.comment.window.move (candidate_x, candidate_y)
         else:
             if self.comment != None:
                 self.comment.window.destroy ()
 
+    def on_mouse_motion (self, tree, event):
+        (tree_x, tree_y) = tree.window.get_origin ()
+        self.cursor_y = tree_y + event.y
+        
     def init_view (self):
         self.treeview = self.builder.get_object ("treeview_notification")
+        rect = self.treeview.get_allocation ()
+        self.cursor_y = rect.y - 50
+        self.treeview.connect ("motion_notify_event", self.on_mouse_motion)
         selection = self.treeview.get_selection ()
         selection.connect ("changed", self.on_notification_changed)
         self.column = gtk.TreeViewColumn ("icon")

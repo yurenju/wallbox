@@ -27,7 +27,9 @@ class Comment:
         clist = self.office.get_comments_list (post_id)
         for id in clist:
             comment = self.office.get_comment_entry (post_id, id)
-            liststore.append ([comment['text'], int (comment['time']), str (comment['fromid'])])
+            liststore.append \
+                ([comment['text'], int (comment['time']), \
+                str (comment['fromid'])])
 
         self.status = self.office.get_status (post_id)
         label_status = self.builder.get_object ("label_status")
@@ -36,7 +38,8 @@ class Comment:
         user = self.office.get_user (self.status['uid'])
         main_user_icon = self.builder.get_object ("main_pic")
         user_icons_dir = self.office.get_user_icons_dir ()
-        main_user_icon.set_from_file ("%s/%s" % (user_icons_dir, user['pic_square_local']))
+        main_user_icon.set_from_file \
+            ("%s/%s" % (user_icons_dir, user['pic_square_local']))
 
         self.init_view ()
         #self.refresh_reply_cb ()

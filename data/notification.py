@@ -6,6 +6,7 @@ import gtk
 import dbus
 import dbus.mainloop.glib
 import comment
+import sys
 
 class Notification:
     def __init__ (self):
@@ -24,9 +25,12 @@ class Notification:
             (obj, "org.wallbox.PostOfficeInterface")
 
         self.init_view ()
-        #self.refresh_reply_cb ()
-        self.office.refresh (reply_handler=self.refresh_reply_cb, \
-                            error_handler=self.refresh_error_cb)
+        
+        if len (sys.argv) > 1 and sys.argv[1].strip() == "offline":
+            self.refresh_reply_cb ()
+        else:
+            self.office.refresh (reply_handler=self.refresh_reply_cb, \
+                error_handler=self.refresh_error_cb)
 
     def on_window_resize (self, widget, event, data=None):
         x = self.window.get_size ()[0]

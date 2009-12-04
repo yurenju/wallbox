@@ -50,6 +50,7 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="model">liststore_comment</property>
+            <property name="headers_visible">False</property>
           </object>
           <packing>
             <property name="position">1</property>

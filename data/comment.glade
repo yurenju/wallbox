@@ -13,6 +13,8 @@
     </columns>
   </object>
   <object class="GtkWindow" id="comment_window">
+    <property name="border_width">10</property>
+    <property name="decorated">False</property>
     <child>
       <object class="GtkVBox" id="vbox_main">
         <property name="visible">True</property>

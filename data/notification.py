@@ -38,7 +38,8 @@ class Notification:
 
     def on_notification_changed (self, sel):
         rect = self.treeview.get_allocation ()
-        candidate_x = int (rect.x + rect.width - 10)
+        (origin_x, origin_y) = self.treeview.window.get_origin ()
+        candidate_x = int (origin_x + rect.width - 10)
         candidate_y = int (self.cursor_y - 50)
         list, it=sel.get_selected()
         if it == None:

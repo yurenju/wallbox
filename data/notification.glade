@@ -15,7 +15,7 @@
     </columns>
   </object>
   <object class="GtkWindow" id="notification_window">
-    <property name="border_width">5</property>
+    <property name="border_width">10</property>
     <child>
       <object class="GtkVBox" id="vbox_main">
         <property name="visible">True</property>

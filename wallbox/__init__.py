@@ -31,7 +31,7 @@ class PostOffice (dbus.service.Object):
         self.users = []
         self.status = {}
         self.updated_timestamp = None
-        self.notification_num = 5
+        self.notification_num = 10 
         self.refresh_interval = 5
         self.notification = []
         self.api_key = '9103981b8f62c7dbede9757113372240'
@@ -105,7 +105,8 @@ class PostOffice (dbus.service.Object):
             print "post_id: %s" % s
         for c in self.status[post_id]['comments']:
             clist.append (c['id'])
-        print self.status[post_id]['comments']
+            print "\t%s" % c['id']
+        print
         return clist
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='ss', out_signature='a{sv}')
@@ -139,7 +140,7 @@ class PostOffice (dbus.service.Object):
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='a{sv}')
     def get_current_status (self):
         print "get current status"
-        print self.current_status
+        print "%s\n" % self.current_status['message']
         return self.current_status
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='a{sv}')
@@ -151,13 +152,18 @@ class PostOffice (dbus.service.Object):
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='i', out_signature='a{sv}')
     def get_status_with_nid (self, nid):
+        print "get_status_with_nid: %s" % nid
         result = None
         for key in self.status:
-            print self.status[key]
-            if self.status[key].has_key ('notification_id') and \
-                self.status[key]['notification_id'] == nid:
+            print "id: ",
+            for id in self.status[key]['notification_ids']:
+                print "%s, " % id,
+            print
+            if self.status[key].has_key ('notification_ids') and \
+                nid in self.status[key]['notification_ids']:
                 result = self.status[key].copy ()
                 del result ['comments']
+                print "%s\n" % result['message']
                 return result
         return {}
     
@@ -222,19 +228,23 @@ class PostOffice (dbus.service.Object):
                     id = m_id.group (1)
                     status_id = m_fbid.group (1)
                     post_id = "%s_%s" % (id, status_id)
-                    self.status[post_id] = {}
-                    self.status[post_id] = self.fb.fql.query \
-                        ("SELECT uid, time, message, status_id FROM status " + \
-                        "WHERE uid = %s AND status_id = %s LIMIT 1" % \
-                        (id, status_id))[0]
+                    if not self.status.has_key (post_id):
+                        self.status[post_id] = {}
+                        self.status[post_id] = self.fb.fql.query \
+                            ("SELECT uid, time, message, status_id FROM status " + \
+                            "WHERE uid = %s AND status_id = %s LIMIT 1" % \
+                            (id, status_id))[0]
 
-                    comments = self.fb.fql.query \
-                        ("SELECT id, fromid, text, time FROM comment WHERE post_id='%s'" \
-                        % post_id)
+                        comments = self.fb.fql.query \
+                            ("SELECT id, fromid, text, time FROM comment WHERE post_id='%s'" \
+                            % post_id)
 
-                    self.status[post_id]['comments'] = comments
-                    self._dump_comments (post_id)
-                    self.status[post_id]['notification_id'] = int (n['notification_id'])
+                        self.status[post_id]['comments'] = comments
+                        self._dump_comments (post_id)
+                    if not self.status[post_id].has_key ('notification_ids'):
+                        self.status[post_id]['notification_ids'] = []
+                    if not int (n['notification_id']) in self.status[post_id]['notification_ids']:
+                        self.status[post_id]['notification_ids'].append (int (n['notification_id']))
 
         '''
         current_post_id = "%s_%s" % (self.current_status['uid'], self.current_status['status_id'])

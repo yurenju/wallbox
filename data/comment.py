@@ -42,9 +42,6 @@ class Comment:
             ("%s/%s" % (user_icons_dir, user['pic_square_local']))
 
         self.init_view ()
-        #self.refresh_reply_cb ()
-        #self.office.refresh (reply_handler=self.refresh_reply_cb, \
-        #                    error_handler=self.refresh_error_cb)
 
     def on_window_resize (self, widget, event, data=None):
         x = self.window.get_size ()[0]

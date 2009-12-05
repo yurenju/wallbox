@@ -38,8 +38,13 @@ class Notification:
     def on_notification_changed (self, sel):
         rect = self.treeview.get_allocation ()
         (origin_x, origin_y) = self.treeview.window.get_origin ()
+
         candidate_x = int (origin_x + rect.width - 10)
         candidate_y = int (self.cursor_y - 50)
+        
+        comment_width = comment.STATUS_WIDTH + comment.MAIN_ICON_SIZE
+        if candidate_x > gtk.gdk.screen_width () - comment_width + 100:
+            candidate_x = origin_x - comment_width - 20
         
         list, it=sel.get_selected()
         if it == None:

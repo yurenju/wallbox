@@ -32,11 +32,12 @@ class PostOffice (dbus.service.Object):
         self.status = {}
         self.updated_timestamp = None
         self.notification_num = 10 
-        self.refresh_interval = 5
+        self.refresh_interval = 60
         self.notification = []
         self.api_key = '9103981b8f62c7dbede9757113372240'
         self.office_status = NO_LOGIN
         self.prepare_directories ()
+        self.timer_id = gobject.timeout_add_seconds (self.refresh_interval, self.refresh)
 
         # wallbox auth
         self.fb = facebook.Facebook (self.api_key, secert.key)
@@ -119,6 +120,9 @@ class PostOffice (dbus.service.Object):
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='')
     def refresh (self):
+        if self.office_status != IS_LOGIN:
+            print "not IS_LOGIN"
+            return True
         print "refresh start"
         self.get_remote_current_status ()
         print "get remote current status"
@@ -132,6 +136,7 @@ class PostOffice (dbus.service.Object):
         print "get remote applications icon"
         self.updated_timestamp = datetime.date.today ()
         print "updated finish"
+        return True
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='')
     def post_status (self, text):

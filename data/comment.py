@@ -89,6 +89,7 @@ class Comment:
                 ("%s/%s" % (icons_dir, user['pic_square_local']))
         else:
             icon = gtk.image_new_from_file ("images/q_silhouette.gif")
+
         pixbuf = icon.get_pixbuf ()
         scaled_buf = \
             pixbuf.scale_simple \

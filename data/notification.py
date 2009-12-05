@@ -9,13 +9,12 @@ import comment
 import sys
 
 class Notification:
-    def __init__ (self):
+    def __init__ (self, offline=False):
         self.comment = None
         self.builder = gtk.Builder ()
         self.builder.add_from_file ("notification.glade")
         self.window = self.builder.get_object ("notification_window")
         self.window.connect ("configure-event", self.on_window_resize)
-        self.window.show ()
 
         bus = dbus.SessionBus ()
         obj = bus.get_object ("org.wallbox.PostOfficeService", \
@@ -26,7 +25,7 @@ class Notification:
 
         self.init_view ()
         
-        if len (sys.argv) > 1 and sys.argv[1].strip() == "offline":
+        if offline:
             self.refresh_reply_cb ()
         else:
             self.office.refresh (reply_handler=self.refresh_reply_cb, \
@@ -41,6 +40,7 @@ class Notification:
         (origin_x, origin_y) = self.treeview.window.get_origin ()
         candidate_x = int (origin_x + rect.width - 10)
         candidate_y = int (self.cursor_y - 50)
+        
         list, it=sel.get_selected()
         if it == None:
             return
@@ -128,7 +128,8 @@ class Notification:
 
             if int (entry['app_id']) == 19675640871:
                 has_detail = True
-            liststore.append ([entry['app_id'], text, has_detail, int(entry['notification_id'])])
+            liststore.append \
+                ([entry['app_id'], text, has_detail, int(entry['notification_id'])])
 
     def refresh_error_cb (self, e):
         print e
@@ -136,6 +137,12 @@ class Notification:
 
 if __name__ == "__main__":
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-    n = Notification ()
+    offline = False
+    if len (sys.argv) > 1 and sys.argv[1].strip() == "offline":
+        offline = True
+    else:
+        offline = False
+
+    n = Notification (offline)
     gtk.main ()
 

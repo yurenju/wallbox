@@ -48,6 +48,14 @@ class Comment:
         main_user_icon.set_from_file \
             ("%s/%s" % (user_icons_dir, user['pic_square_local']))
 
+        current_pic = self.builder.get_object ("current_user_pic")
+        pixbuf = gtk.image_new_from_file \
+            ("%s/%s" % (user_icons_dir, user['pic_square_local'])).get_pixbuf ()
+        scaled_buf = \
+            pixbuf.scale_simple \
+            (COMMENT_ICON_SIZE, COMMENT_ICON_SIZE, gtk.gdk.INTERP_BILINEAR)
+        current_pic = current_pic.set_from_pixbuf (scaled_buf)
+
         self.init_view ()
 
     def on_window_resize (self, widget, event, data=None):

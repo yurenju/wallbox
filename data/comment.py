@@ -7,6 +7,12 @@ import dbus
 import dbus.mainloop.glib
 import sys
 
+COMMENT_ICON_SIZE = 30
+MAIN_ICON_SIZE = 50
+TEXT_CELL_WIDTH = 200
+STATUS_WIDTH = \
+    TEXT_CELL_WIDTH - (MAIN_ICON_SIZE - COMMENT_ICON_SIZE)
+
 class Comment:
     def __init__ (self, post_id):
         self.builder = gtk.Builder ()
@@ -34,6 +40,7 @@ class Comment:
         self.status = self.office.get_status (post_id)
         label_status = self.builder.get_object ("label_status")
         label_status.set_text (self.status['message'])
+        label_status.set_size_request (STATUS_WIDTH, -1)
 
         user = self.office.get_user (self.status['uid'])
         main_user_icon = self.builder.get_object ("main_pic")
@@ -55,7 +62,7 @@ class Comment:
         self.text_cell = gtk.CellRendererText ()
 
         self.icon_cell.set_property ("yalign", 0.1)
-        self.text_cell.set_property ("wrap-width", 300)
+        self.text_cell.set_property ("wrap-width", TEXT_CELL_WIDTH)
         self.text_cell.set_property ("yalign", 0.1)
 
         self.column.pack_start (self.icon_cell, False)
@@ -70,7 +77,9 @@ class Comment:
         icons_dir = self.office.get_user_icons_dir ()
         icon = gtk.image_new_from_file ("%s/%s" % (icons_dir, user['pic_square_local']))
         pixbuf = icon.get_pixbuf ()
-        scaled_buf = pixbuf.scale_simple (30, 30, gtk.gdk.INTERP_BILINEAR)
+        scaled_buf = \
+            pixbuf.scale_simple \
+            (COMMENT_ICON_SIZE, COMMENT_ICON_SIZE, gtk.gdk.INTERP_BILINEAR)
         cell.set_property ('pixbuf', scaled_buf)
 
     def make_text (self, column, cell, model, iter):

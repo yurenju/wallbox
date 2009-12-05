@@ -33,7 +33,6 @@
             </child>
             <child>
               <object class="GtkLabel" id="label_status">
-                <property name="width_request">200</property>
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">label</property>
                 <property name="wrap">True</property>

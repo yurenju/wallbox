@@ -13,6 +13,7 @@ class Notification:
         self.comment = None
         self.builder = gtk.Builder ()
         self.builder.add_from_file ("notification.glade")
+        self.builder.connect_signals (self, None)
         self.window = self.builder.get_object ("notification_window")
         self.window.connect ("configure-event", self.on_window_resize)
 
@@ -30,6 +31,15 @@ class Notification:
         else:
             self.office.refresh (reply_handler=self.refresh_reply_cb, \
                 error_handler=self.refresh_error_cb)
+
+    def on_button_share_clicked (self, button, data=None):
+        print "on_button_share_clicked"
+        entry_status = self.builder.get_object ("entry_status")
+        if entry_status != None and len (entry_status.get_text ()) > 0:
+            self.office.post_status (entry_status.get_text ())
+            current_status = self.builder.get_object ("label_current_status")
+            current_status.set_text (entry_status.get_text())
+            entry_status.set_text ("")
 
     def on_window_resize (self, widget, event, data=None):
         x = self.window.get_size ()[0]

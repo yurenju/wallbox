@@ -11,6 +11,8 @@ import comment
 def show_notification (icon, n):
     if n.window.get_property ("visible"):
         n.window.hide ()
+        if n.comment != None:
+            n.comment.window.destroy ()
     else:
         (screen, rect, orientation) = icon.get_geometry ()
         n.window.move (rect.x, rect.y+10)

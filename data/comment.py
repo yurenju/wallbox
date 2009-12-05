@@ -15,10 +15,11 @@ STATUS_WIDTH = \
 
 class Comment:
     def __init__ (self, post_id):
+        self.post_id = post_id
         self.builder = gtk.Builder ()
         self.builder.add_from_file ("comment.glade")
+        self.builder.connect_signals (self, None)
         self.window = self.builder.get_object ("comment_window")
-        #self.window.connect ("configure-event", self.on_window_resize)
         self.window.show ()
 
         bus = dbus.SessionBus ()
@@ -55,8 +56,18 @@ class Comment:
             pixbuf.scale_simple \
             (COMMENT_ICON_SIZE, COMMENT_ICON_SIZE, gtk.gdk.INTERP_BILINEAR)
         current_pic = current_pic.set_from_pixbuf (scaled_buf)
+        self.user = user
 
         self.init_view ()
+
+    def on_button_share_clicked (self, button, data=None):
+        entry = self.builder.get_object ("entry_comment")
+        if entry != None and len (entry.get_text ()) > 0:
+            self.office.post_comment (self.post_id, entry.get_text ())
+            liststore = self.builder.get_object ("liststore_comment")
+            liststore.append ([entry.get_text(), 0, self.user['uid']])
+            entry.set_text ("")
+
 
     def on_window_resize (self, widget, event, data=None):
         x = self.window.get_size ()[0]

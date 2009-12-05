@@ -80,10 +80,15 @@ class Comment:
         self.column.set_cell_data_func (self.text_cell, self.make_text)
 
     def make_icon (self, column, cell, model, iter):
+        icon = None
         uid = model.get_value (iter, 2)
         user = self.office.get_user (long (uid))
         icons_dir = self.office.get_user_icons_dir ()
-        icon = gtk.image_new_from_file ("%s/%s" % (icons_dir, user['pic_square_local']))
+        if user.has_key ('pic_square_local'):
+            icon = gtk.image_new_from_file \
+                ("%s/%s" % (icons_dir, user['pic_square_local']))
+        else:
+            icon = gtk.image_new_from_file ("images/q_silhouette.gif")
         pixbuf = icon.get_pixbuf ()
         scaled_buf = \
             pixbuf.scale_simple \

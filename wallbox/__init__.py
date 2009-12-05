@@ -135,7 +135,7 @@ class PostOffice (dbus.service.Object):
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='')
     def post_status (self, text):
-        self.fb.users.setStatus (status=text, clear=False, status_includes_verb=False, uid=self.uid)
+        self.fb.users.setStatus (status=text, clear=False, status_includes_verb=True, uid=self.uid)
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='a{sv}')
     def get_current_status (self):

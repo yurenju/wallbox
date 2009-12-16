@@ -22,6 +22,9 @@ class Comment:
         self.window = self.builder.get_object ("comment_window")
         self.window.show ()
 
+        self.entry_comment = self.builder.get_object ("entry_comment")
+        self.entry_comment.grab_focus ()
+
         bus = dbus.SessionBus ()
         obj = bus.get_object ("org.wallbox.PostOfficeService", \
             "/org/wallbox/PostOfficeObject")

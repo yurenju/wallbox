@@ -17,6 +17,7 @@ def show_notification (icon, n):
         (screen, rect, orientation) = icon.get_geometry ()
         n.window.move (rect.x, rect.y+10)
         n.window.show ()
+        n.entry_status.grab_focus ()
 
 if __name__ == "__main__":
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)

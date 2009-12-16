@@ -16,6 +16,7 @@ class Notification:
         self.builder.connect_signals (self, None)
         self.window = self.builder.get_object ("notification_window")
         self.window.connect ("configure-event", self.on_window_resize)
+        self.entry_status = self.builder.get_object ("entry_status")
 
         bus = dbus.SessionBus ()
         obj = bus.get_object ("org.wallbox.PostOfficeService", \

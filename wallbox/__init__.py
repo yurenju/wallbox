@@ -37,7 +37,7 @@ class PostOffice (dbus.service.Object):
         self.api_key = '9103981b8f62c7dbede9757113372240'
         self.office_status = NO_LOGIN
         self.prepare_directories ()
-        self.timer_id = gobject.timeout_add_seconds (self.refresh_interval, self.refresh)
+        #self.timer_id = gobject.timeout_add_seconds (self.refresh_interval, self.refresh)
 
         # wallbox auth
         self.fb = facebook.Facebook (self.api_key, secert.key)
@@ -125,15 +125,15 @@ class PostOffice (dbus.service.Object):
             return True
         print "refresh start"
         self.get_remote_current_status ()
-        print "get remote current status"
+        time.sleep (2)
         self.get_remote_notification ()
-        print "get remote notification"
+        time.sleep (2)
         self.get_remote_comments ()
-        print "get remote comments"
+        time.sleep (2)
         self.get_remote_users_icon ()
-        print "get remote users icon"
+        time.sleep (2)
         self.get_remote_applications_icon ()
-        print "get remote applications icon"
+        time.sleep (2)
         self.updated_timestamp = datetime.date.today ()
         print "updated finish"
         return True
@@ -160,16 +160,18 @@ class PostOffice (dbus.service.Object):
         print "get_status_with_nid: %s" % nid
         result = None
         for key in self.status:
-            print "id: ",
+            print "looking id: ",
             for id in self.status[key]['notification_ids']:
                 print "%s, " % id,
             print
             if self.status[key].has_key ('notification_ids') and \
                 nid in self.status[key]['notification_ids']:
                 result = self.status[key].copy ()
-                del result ['comments']
-                print "%s\n" % result['message']
+                if result.has_key ('comments'):
+                    del result ['comments']
+                print "status: %s\n" % self.status[key]['message']
                 return result
+        print "get_status_with_nid: no result"
         return {}
     
 
@@ -198,14 +200,14 @@ class PostOffice (dbus.service.Object):
         return self.user_icons_dir
 
     def get_remote_current_status (self):
-        status = \
-            self.fb.fql.query \
-            ("SELECT uid, status_id, message, source FROM status WHERE uid='%s' LIMIT 1" % \
-            self.uid)
+        print "get remote current status"
+        qstr = "SELECT uid, status_id, message, source FROM status WHERE uid='%s' LIMIT 1" % self.uid
+        status = self._query (qstr)
 
         self.current_status = status[0]
 
     def get_remote_notification (self):
+        print "get remote notification"
         notification = self.fb.fql.query \
             ("SELECT notification_id, title_text, body_text, is_unread, " + \
             "is_hidden, href, app_id, sender_id " + \
@@ -219,9 +221,38 @@ class PostOffice (dbus.service.Object):
         for c in self.status[post_id]['comments']:
             print "\t%s" % c['text']
 
+    def _dump_status (self):
+        print "=== START === dump status"
+        for skey in self.status:
+            if self.status[skey].has_key ('message'):
+                print "status: %s" % self.status[skey]['message']
+            else:
+                print "ERROR status key: %s has no message" % skey
+                print "detail:\n%s" % self.status[skey]
+            if not self.status[skey].has_key ('notification_ids'):
+                print "NO notification_ids"
+                continue
+            print "nids: ",
+            for n in self.status[skey]['notification_ids']:
+                print "%s, " % n,
+            print "\n=== END === dump status"
+
+    def _query (self, query_str):
+        for i in range (3):
+            try:
+                result = self.fb.fql.query (query_str)
+                if result != None:
+                    return result
+            except:
+                print "URLError, Sleep 3 sec"
+                time.sleep (3)
+        return None
+            
     def get_remote_comments (self):
+        print "get remote comments"
         pattern_id = re.compile ("&id=(\d+)")
         pattern_fbid = re.compile ("story_fbid=(\d+)")
+        delete_n= []
         for n in self.notification:
             print "app_id: %d: %s" % (n['app_id'], n['body_text'])
             if n['app_id'] == 19675640871:
@@ -229,20 +260,29 @@ class PostOffice (dbus.service.Object):
                 post_id = None
                 m_id = pattern_id.search (n['href'])
                 m_fbid = pattern_fbid.search (n['href'])
+
                 if m_id != None and m_fbid != None:
                     id = m_id.group (1)
                     status_id = m_fbid.group (1)
                     post_id = "%s_%s" % (id, status_id)
                     if not self.status.has_key (post_id):
                         self.status[post_id] = {}
-                        self.status[post_id] = self.fb.fql.query \
-                            ("SELECT uid, time, message, status_id FROM status " + \
+                        qstr = "SELECT uid, time, message, status_id FROM status " + \
                             "WHERE uid = %s AND status_id = %s LIMIT 1" % \
-                            (id, status_id))[0]
+                            (id, status_id)
+                        result = self._query (qstr)
 
-                        comments = self.fb.fql.query \
-                            ("SELECT id, fromid, text, time FROM comment WHERE post_id='%s'" \
-                            % post_id)
+                        if result != None and len (result) > 0:
+                            self.status[post_id] = result[0]
+                        else:
+                            print "can't get status_id"
+                            print "detail\n===\nbody: %s\nhref: %s\nquery str: %s\n===" % (n['body_text'], n['href'], qstr)
+                            delete_n.append (n)
+                            del self.status[post_id]
+                            continue
+
+                        qstr = "SELECT id, fromid, text, time FROM comment WHERE post_id='%s'" % post_id
+                        comments = self._query (qstr)
 
                         self.status[post_id]['comments'] = comments
                         self._dump_comments (post_id)
@@ -250,6 +290,11 @@ class PostOffice (dbus.service.Object):
                         self.status[post_id]['notification_ids'] = []
                     if not int (n['notification_id']) in self.status[post_id]['notification_ids']:
                         self.status[post_id]['notification_ids'].append (int (n['notification_id']))
+        for n in delete_n:
+            print "delete notification: %s" % n['body_text']
+            ni = self.notification.index (n)
+            del self.notification[ni]
+        self._dump_status ()
 
         '''
         current_post_id = "%s_%s" % (self.current_status['uid'], self.current_status['status_id'])
@@ -265,13 +310,15 @@ class PostOffice (dbus.service.Object):
         '''
 
     def get_remote_users_icon (self):
+        print "get remote users icon"
         for n in self.notification:
             if not n['sender_id'] in self.user_ids:
                 self.user_ids.append (n['sender_id'])
         for skey in self.status:
-            for c in self.status[skey]['comments']:
-                if not c['fromid'] in self.user_ids:
-                    self.user_ids.append (c['fromid'])
+            if self.status[skey].has_key ('comments'):
+                for c in self.status[skey]['comments']:
+                    if not c['fromid'] in self.user_ids:
+                        self.user_ids.append (c['fromid'])
         self.users = \
             self.fb.users.getInfo (self.user_ids, ["name", "pic_square"])
 
@@ -287,6 +334,7 @@ class PostOffice (dbus.service.Object):
                 u['pic_square_local'] = icon_name
 
     def get_remote_applications_icon (self):
+        print "get remote applications icon"
         for n in self.notification:
             if not n['app_id'] in self.app_ids:
                 self.app_ids.append (n['app_id'])

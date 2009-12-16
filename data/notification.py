@@ -61,15 +61,14 @@ class Notification:
             return
         nid = list.get (it, 3)[0]
         has_detail = list.get (it, 2)[0]
-        print nid
-        print has_detail
+        print "nid: %s" % nid
+        print "has_detail: %s" % has_detail
         if has_detail:
             if self.comment != None:
                 self.comment.window.destroy ()
             status = self.office.get_status_with_nid (nid)
-            print status
             if status != {}:
-                print status
+                print "status: %s" % status['message']
                 self.comment = \
                     comment.Comment \
                     ("%s_%s" % (status['uid'], status['status_id']))

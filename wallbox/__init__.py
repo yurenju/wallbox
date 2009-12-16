@@ -17,10 +17,9 @@ import secert
 __author__ = 'Yuren Ju <yurenju@gmail.com>'
 
 IS_LOGIN = 0
-LOADING = 1
+REFRESHING = 1
 WAITING_LOGIN = 2
 NO_LOGIN = 3
-STANDBY = 4
 
 class PostOffice (dbus.service.Object):
     def __init__ (self, bus_name, bus_path):
@@ -56,7 +55,7 @@ class PostOffice (dbus.service.Object):
     def login (self):
         self.fb.auth.createToken ()
         self.fb.login ()
-        self.office_status = WAITING_LOGIN
+        self.status_changed (WAITING_LOGIN)
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='')
     def get_ext_perm (self):
@@ -72,7 +71,7 @@ class PostOffice (dbus.service.Object):
         self.session = self.fb.auth.getSession ()
         self.uid = self.fb.users.getInfo ([self.fb.uid])[0]['uid']
         self.user_ids.append (self.uid)
-        self.office_status = IS_LOGIN
+        self.status_changed (IS_LOGIN)
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='ai')
     def get_notification_list (self):
@@ -124,6 +123,8 @@ class PostOffice (dbus.service.Object):
             print "not IS_LOGIN"
             return True
         print "refresh start"
+        orig_status = self.office_status
+        self.status_changed (REFRESHING)
         self.get_remote_current_status ()
         time.sleep (2)
         self.get_remote_notification ()
@@ -136,6 +137,7 @@ class PostOffice (dbus.service.Object):
         time.sleep (2)
         self.updated_timestamp = datetime.date.today ()
         print "updated finish"
+        self.status_changed (orig_status)
         return True
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='')
@@ -199,6 +201,11 @@ class PostOffice (dbus.service.Object):
     def get_user_icons_dir (self):
         return self.user_icons_dir
 
+    @dbus.service.signal ("org.wallbox.PostOfficeInterface", signature='i')
+    def status_changed (self, status):
+        self.office_status = status
+        print "emit signal: %s" % status
+
     def get_remote_current_status (self):
         print "get remote current status"
         qstr = "SELECT uid, status_id, message, source FROM status WHERE uid='%s' LIMIT 1" % self.uid
@@ -253,6 +260,7 @@ class PostOffice (dbus.service.Object):
         pattern_id = re.compile ("&id=(\d+)")
         pattern_fbid = re.compile ("story_fbid=(\d+)")
         delete_n= []
+        new_status = {}
         for n in self.notification:
             print "app_id: %d: %s" % (n['app_id'], n['body_text'])
             if n['app_id'] == 19675640871:
@@ -265,49 +273,37 @@ class PostOffice (dbus.service.Object):
                     id = m_id.group (1)
                     status_id = m_fbid.group (1)
                     post_id = "%s_%s" % (id, status_id)
-                    if not self.status.has_key (post_id):
-                        self.status[post_id] = {}
+                    if not new_status.has_key (post_id):
+                        new_status[post_id] = {}
                         qstr = "SELECT uid, time, message, status_id FROM status " + \
                             "WHERE uid = %s AND status_id = %s LIMIT 1" % \
                             (id, status_id)
                         result = self._query (qstr)
 
                         if result != None and len (result) > 0:
-                            self.status[post_id] = result[0]
+                            new_status[post_id] = result[0]
                         else:
                             print "can't get status_id"
                             print "detail\n===\nbody: %s\nhref: %s\nquery str: %s\n===" % (n['body_text'], n['href'], qstr)
                             delete_n.append (n)
-                            del self.status[post_id]
+                            del new_status[post_id]
                             continue
 
                         qstr = "SELECT id, fromid, text, time FROM comment WHERE post_id='%s'" % post_id
                         comments = self._query (qstr)
 
-                        self.status[post_id]['comments'] = comments
-                        self._dump_comments (post_id)
-                    if not self.status[post_id].has_key ('notification_ids'):
-                        self.status[post_id]['notification_ids'] = []
-                    if not int (n['notification_id']) in self.status[post_id]['notification_ids']:
-                        self.status[post_id]['notification_ids'].append (int (n['notification_id']))
+                        new_status[post_id]['comments'] = comments
+                        #self._dump_comments (post_id, new_status)
+                    if not new_status[post_id].has_key ('notification_ids'):
+                        new_status[post_id]['notification_ids'] = []
+                    if not int (n['notification_id']) in new_status[post_id]['notification_ids']:
+                        new_status[post_id]['notification_ids'].append (int (n['notification_id']))
+        self.status = new_status
         for n in delete_n:
             print "delete notification: %s" % n['body_text']
             ni = self.notification.index (n)
             del self.notification[ni]
         self._dump_status ()
-
-        '''
-        current_post_id = "%s_%s" % (self.current_status['uid'], self.current_status['status_id'])
-        self.status[current_post_id] = {}
-        self.status[current_post_id]['message'] = self.current_status['message']
-        comments = self.fb.fql.query \
-            ("SELECT id, fromid, text, time FROM comment WHERE post_id='%s'" \
-            % current_post_id)
-
-        self.status[current_post_id]['comments'] = comments
-        self._dump_comments (current_post_id)
-        self.status[post_id]['notification_id'] = int (n['notification_id'])
-        '''
 
     def get_remote_users_icon (self):
         print "get remote users icon"

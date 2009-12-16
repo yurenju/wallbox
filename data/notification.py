@@ -25,6 +25,10 @@ class Notification:
         self.office = dbus.Interface \
             (obj, "org.wallbox.PostOfficeInterface")
 
+        self.office.connect_to_signal \
+            ("status_changed", self.on_office_status_changed, \
+            dbus_interface="org.wallbox.PostOfficeInterface")
+
         self.init_view ()
         
         if offline:
@@ -32,6 +36,11 @@ class Notification:
         else:
             self.office.refresh (reply_handler=self.refresh_reply_cb, \
                 error_handler=self.refresh_error_cb)
+
+    def on_link_refresh_clicked (self, link, data=None):
+        print "on_link_refresh_clicked"
+        self.office.refresh (reply_handler=self.refresh_reply_cb, \
+            error_handler=self.refresh_error_cb)
 
     def on_button_share_clicked (self, button, data=None):
         print "on_button_share_clicked"
@@ -46,6 +55,15 @@ class Notification:
         x = self.window.get_size ()[0]
         self.text_cell.set_property ("wrap-width", x - 50)
 
+    def on_office_status_changed (self, status):
+        link_refresh = self.builder.get_object ("link_refresh")
+        if status == 1:
+            #refresh
+            link_refresh.set_label ("Refreshing....")
+        else:
+            self.refresh_reply_cb ()
+            link_refresh.set_label ("Refresh")
+
     def on_notification_changed (self, sel):
         rect = self.treeview.get_allocation ()
         (origin_x, origin_y) = self.treeview.window.get_origin ()
@@ -54,7 +72,7 @@ class Notification:
         candidate_y = int (self.cursor_y - 50)
         
         comment_width = comment.STATUS_WIDTH + comment.MAIN_ICON_SIZE
-        if candidate_x > gtk.gdk.screen_width () - comment_width + 100:
+        if candidate_x > gtk.gdk.screen_width () - comment_width - 100:
             candidate_x = origin_x - comment_width - 20
         
         list, it=sel.get_selected()
@@ -121,7 +139,7 @@ class Notification:
             arrow = ">>"
         cell.set_property ('text', arrow)
 
-    def refresh_reply_cb (self):
+    def refresh_reply_cb (self, data=None):
         label = self.builder.get_object ("label_current_status")
         status = self.office.get_current_status ()
         label.set_text (status['message'])
@@ -132,6 +150,7 @@ class Notification:
 
         nlist = self.office.get_notification_list ()
         liststore = self.builder.get_object ("list_notification")
+        liststore.clear ()
         for nid in nlist:
             entry = self.office.get_notification_entry (nid)
             text = None

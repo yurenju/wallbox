@@ -108,7 +108,7 @@
                 <property name="receives_default">True</property>
                 <property name="has_tooltip">True</property>
                 <property name="relief">none</property>
-                <property name="uri">http://glade.gnome.org</property>
+                <signal name="clicked" handler="on_link_refresh_clicked"/>
               </object>
               <packing>
                 <property name="expand">False</property>

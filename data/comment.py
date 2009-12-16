@@ -50,7 +50,9 @@ class Comment:
             ("%s/%s" % (user_icons_dir, user['pic_square_local']))
 
         current_pic = self.builder.get_object ("current_user_pic")
-        icon_path = "%s/%s" % (user_icons_dir, user['pic_square_local'])
+        current_user = self.office.get_current_user ()
+        icon_path = "%s/%s" % \
+            (user_icons_dir, current_user['pic_square_local'])
         pixbuf = None
         try:
             pixbuf = gtk.image_new_from_file (icon_path).get_pixbuf ()

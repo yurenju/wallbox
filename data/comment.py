@@ -50,8 +50,9 @@ class Comment:
             ("%s/%s" % (user_icons_dir, user['pic_square_local']))
 
         current_pic = self.builder.get_object ("current_user_pic")
-        pixbuf = gtk.image_new_from_file \
-            ("%s/%s" % (user_icons_dir, user['pic_square_local'])).get_pixbuf ()
+        icon_path = "%s/%s" % (user_icons_dir, user['pic_square_local'])
+        print "icon_path: %s" % icon_path
+        pixbuf = gtk.image_new_from_file (icon_path).get_pixbuf ()
         scaled_buf = \
             pixbuf.scale_simple \
             (COMMENT_ICON_SIZE, COMMENT_ICON_SIZE, gtk.gdk.INTERP_BILINEAR)
@@ -96,12 +97,18 @@ class Comment:
         user = self.office.get_user (long (uid))
         icons_dir = self.office.get_user_icons_dir ()
         if user.has_key ('pic_square_local'):
-            icon = gtk.image_new_from_file \
-                ("%s/%s" % (icons_dir, user['pic_square_local']))
+            icon_path = "%s/%s" % (icons_dir, user['pic_square_local'])
+            print "icon_path: %s" % icon_path
+            icon = gtk.image_new_from_file (icon_path)
         else:
             icon = gtk.image_new_from_file ("images/q_silhouette.gif")
 
-        pixbuf = icon.get_pixbuf ()
+        try:
+            pixbuf = icon.get_pixbuf ()
+        except:
+            icon = gtk.image_new_from_file ("images/q_silhouette.gif")
+            pixbuf = icon.get_pixbuf ()
+
         scaled_buf = \
             pixbuf.scale_simple \
             (COMMENT_ICON_SIZE, COMMENT_ICON_SIZE, gtk.gdk.INTERP_BILINEAR)

@@ -51,8 +51,14 @@ class Comment:
 
         current_pic = self.builder.get_object ("current_user_pic")
         icon_path = "%s/%s" % (user_icons_dir, user['pic_square_local'])
-        print "icon_path: %s" % icon_path
-        pixbuf = gtk.image_new_from_file (icon_path).get_pixbuf ()
+        pixbuf = None
+        try:
+            pixbuf = gtk.image_new_from_file (icon_path).get_pixbuf ()
+        except:
+            print "no icon: comment.py:59 [%s]" % icon_path
+            icon = gtk.image_new_from_file ("images/q_silhouette.gif")
+            pixbuf = icon.get_pixbuf ()
+            
         scaled_buf = \
             pixbuf.scale_simple \
             (COMMENT_ICON_SIZE, COMMENT_ICON_SIZE, gtk.gdk.INTERP_BILINEAR)
@@ -98,7 +104,6 @@ class Comment:
         icons_dir = self.office.get_user_icons_dir ()
         if user.has_key ('pic_square_local'):
             icon_path = "%s/%s" % (icons_dir, user['pic_square_local'])
-            print "icon_path: %s" % icon_path
             icon = gtk.image_new_from_file (icon_path)
         else:
             icon = gtk.image_new_from_file ("images/q_silhouette.gif")
@@ -106,6 +111,7 @@ class Comment:
         try:
             pixbuf = icon.get_pixbuf ()
         except:
+            print "no icon: comment.py:116 [%s]" % icon_path
             icon = gtk.image_new_from_file ("images/q_silhouette.gif")
             pixbuf = icon.get_pixbuf ()
 

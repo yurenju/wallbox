@@ -47,7 +47,6 @@ $ ./wizard.py
 please "login" and press "continue"
 after that, plase press ctrl + C to finish Wizard.
 
-$ ./notification.py (initial receive data)
 $ ./wallbox.py
 
 

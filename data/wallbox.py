@@ -23,6 +23,6 @@ if __name__ == "__main__":
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
     status_icon = gtk.status_icon_new_from_stock (gtk.STOCK_OPEN)
-    n = notification.Notification (True)
+    n = notification.Notification ()
     status_icon.connect ("activate", show_notification, n)
     gtk.main ()

@@ -1,27 +1,53 @@
 wallbox v0.1
 Copyright (C) 2009, .
 
-Brief description of project....
+WARNING: this project only has pre-alpha quality.
+design document:
+
+http://docs.google.com/View?id=ajd93zkqrjq5_342cqdrxqcd
 
 -----------------------------------------------------------------------------
- Build
+ Prerequisites
 -----------------------------------------------------------------------------
-$ ./autogen.sh
-$ make
+
+In Ubuntu 9.04 (Karmic), python-facebook is too old.
+please install python-facebook 0.svn20090724-1.1 from lucid.
+
+http://packages.ubuntu.com/lucid/all/python-facebook/download
+
+In Debian Squeeze/Sid please install python-facebook:
+# apt-get install python-facebook
+
+In Arch Linux please install pyfacebook-git from AUR.
+$ yaourt -S pyfacebook-git
 
 -----------------------------------------------------------------------------
- Build with documentation generated (usually for libraries)
+ Configuration
 -----------------------------------------------------------------------------
-$ ./autogen.sh --enable-gtk-doc
-$ make
 
-( If built with the --enable-gtk-doc flag above you can view the index.html
-  file in your web browser. )
-$ firefox ./docs/reference/index.html
+you need get secert.py and put it in wallbox/wallbox/, please contact 
+yurenju (AT) gmail (DOT) com. currently, we can't run application without 
+secery key.
+
+if you know how to run application without secert key, please 
+fork and patch it.
+
 
 -----------------------------------------------------------------------------
- Install
+ Run
 -----------------------------------------------------------------------------
-$ sudo make install
+
+$ cd wallbox/wallbox
+$ python ./__init__.py
+
+Open another terminal
+$ cd wallbox/data
+$ ./wizard.py
+
+please "login" and press "continue"
+after that, plase press ctrl + C to finish Wizard.
+
+$ ./notification.py (initial receive data)
+$ ./wallbox.py
 
 

@@ -33,6 +33,7 @@ class PostOffice (dbus.service.Object):
         self.notification_num = 10 
         self.refresh_interval = 60
         self.notification = []
+        self.session = None
         self.api_key = '9103981b8f62c7dbede9757113372240'
         self.office_status = NO_LOGIN
         self.prepare_directories ()
@@ -72,6 +73,12 @@ class PostOffice (dbus.service.Object):
         self.uid = self.fb.users.getInfo ([self.fb.uid])[0]['uid']
         self.user_ids.append (self.uid)
         self.status_changed (IS_LOGIN)
+
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='a{sv}')
+    def get_session (self):
+        if self.session == None:
+            return {}
+        return self.session
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='ai')
     def get_notification_list (self):
@@ -215,7 +222,7 @@ class PostOffice (dbus.service.Object):
 
     def get_remote_notification (self):
         print "get remote notification"
-        notification = self.fb.fql.query \
+        notification = self._query \
             ("SELECT notification_id, title_text, body_text, is_unread, " + \
             "is_hidden, href, app_id, sender_id " + \
             "FROM notification WHERE recipient_id = '%d' LIMIT %d" % \

@@ -7,6 +7,7 @@ import dbus
 import dbus.mainloop.glib
 import comment
 import sys
+import time
 
 class Notification:
     def __init__ (self, offline=False):
@@ -25,9 +26,17 @@ class Notification:
         self.office = dbus.Interface \
             (obj, "org.wallbox.PostOfficeInterface")
 
-        self.office.connect_to_signal \
-            ("status_changed", self.on_office_status_changed, \
-            dbus_interface="org.wallbox.PostOfficeInterface")
+        session = self.office.get_session ()
+        if session == {}:
+            self.office.login ()
+            for i in range (3):
+                try:
+                    self.office.login_completed ()
+                    break
+                except:
+                    print "login failed, waiting 3 sec"
+                    time.sleep (3)
+                    continue
 
         self.init_view ()
         
@@ -36,6 +45,12 @@ class Notification:
         else:
             self.office.refresh (reply_handler=self.refresh_reply_cb, \
                 error_handler=self.refresh_error_cb)
+            self.on_office_status_changed (1)
+
+
+        self.office.connect_to_signal \
+            ("status_changed", self.on_office_status_changed, \
+            dbus_interface="org.wallbox.PostOfficeInterface")
 
     def on_link_refresh_clicked (self, link, data=None):
         print "on_link_refresh_clicked"

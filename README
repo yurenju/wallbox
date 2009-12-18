@@ -40,12 +40,11 @@ fork and patch it.
 $ cd wallbox/wallbox
 $ python ./__init__.py
 
-Open another terminal
+If this is first time use wallbox, please Open another terminal
 $ cd wallbox/data
 $ ./wizard.py
 
-please "login" and press "continue"
-after that, plase press ctrl + C to finish Wizard.
+and complete wizard steps
 
 $ ./wallbox.py
 

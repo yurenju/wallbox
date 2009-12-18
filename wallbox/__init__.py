@@ -225,7 +225,7 @@ class PostOffice (dbus.service.Object):
         notification = self._query \
             ("SELECT notification_id, title_text, body_text, is_unread, " + \
             "is_hidden, href, app_id, sender_id " + \
-            "FROM notification WHERE recipient_id = '%d' LIMIT %d" % \
+            "FROM notification WHERE recipient_id = '%s' LIMIT %s" % \
             (self.uid, self.notification_num))
         self.notification = notification
 
@@ -269,7 +269,7 @@ class PostOffice (dbus.service.Object):
         delete_n= []
         new_status = {}
         for n in self.notification:
-            print "app_id: %d: %s" % (n['app_id'], n['body_text'])
+            print "app_id: %s: %s" % (n['app_id'], n['body_text'])
             if n['app_id'] == 19675640871:
                 #get post_id
                 post_id = None

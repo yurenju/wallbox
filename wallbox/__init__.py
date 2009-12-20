@@ -15,6 +15,7 @@ import datetime
 import secert
 import threading
 import gtk
+import pickle
 
 __author__ = 'Yuren Ju <yurenju@gmail.com>'
 
@@ -42,6 +43,7 @@ class RefreshProcess (threading.Thread):
         self.notification = []
         self.user_icons_dir = user_icons_dir
         self.app_icons_dir = app_icons_dir
+
     
     def _dump_comments (self, post_id):
         print "status: %s: %s" % (post_id, self.status[post_id]['message'])
@@ -217,7 +219,7 @@ class PostOffice (dbus.service.Object):
         self.api_key = '9103981b8f62c7dbede9757113372240'
         self.office_status = NO_LOGIN
         self.prepare_directories ()
-        #self.timer_id = gobject.timeout_add_seconds (self.refresh_interval, self.refresh)
+        self.pickle_load ()
 
         # wallbox auth
         self.fb = facebook.Facebook (self.api_key, secert.key)
@@ -306,6 +308,27 @@ class PostOffice (dbus.service.Object):
                 return c
         return {}
 
+    def pickle_load (self):
+        attributes = ["current_status", "notification", "status", "user_ids", "users", "app_ids", "applications"]
+        for attr_str in attributes:
+            path = self.local_data_dir + "/%s.pickle" % attr_str
+            if os.path.exists (path):
+                file = open (path, 'r')
+                try:
+                    attr = pickle.load (file)
+                    attr = setattr (self, attr_str, attr)
+                except:
+                    pass
+                file.close ()
+
+    def pickle_dump (self):
+        attributes = ["current_status", "notification", "status", "user_ids", "users", "app_ids", "applications"]
+        for attr_str in attributes:
+            output = open (self.local_data_dir + "/%s.pickle" % attr_str, 'wb')
+            attr = getattr (self, attr_str)
+            pickle.dump (attr, output)
+            output.close ()
+
     def check_refresh_complete (self):
         if self.rs.is_alive ():
             return True
@@ -318,6 +341,8 @@ class PostOffice (dbus.service.Object):
         self.app_ids = self.rs.app_ids
         self.applications = self.rs.applications
 
+        self.pickle_dump ()
+
         self.status_changed (self.orig_office_status)
         return False
 
@@ -325,7 +350,7 @@ class PostOffice (dbus.service.Object):
     def refresh (self):
         if self.office_status != IS_LOGIN:
             print "not IS_LOGIN"
-            return True
+            return
 
         self.orig_office_status = self.office_status
         self.status_changed (REFRESHING)
@@ -335,7 +360,6 @@ class PostOffice (dbus.service.Object):
         self.rs.start ()
         gobject.timeout_add (1000, self.check_refresh_complete)
 
-        return True
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='')
     def post_status (self, text):
@@ -412,11 +436,14 @@ class PostOffice (dbus.service.Object):
         print "emit signal: %s" % status
 
     def prepare_directories (self):
+        self.local_data_dir = \
+            "%s/.local/share/wallbox" % os.getenv ("HOME")
+
         self.user_icons_dir = \
-            "%s/.local/share/wallbox/user_icons" % os.getenv ("HOME")
+            "%s/user_icons" % self.local_data_dir
 
         self.app_icons_dir = \
-            "%s/.local/share/wallbox/app_icons" % os.getenv ("HOME")
+            "%s/app_icons" % self.local_data_dir
 
         for d in [self.user_icons_dir, self.app_icons_dir]:
             if not os.path.exists (d):

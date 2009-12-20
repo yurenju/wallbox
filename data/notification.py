@@ -40,12 +40,9 @@ class Notification:
 
         self.init_view ()
 
-        if offline:
-            self.refresh_reply_cb ()
-        else:
-            self.office.refresh (reply_handler=self.refresh_reply_cb, \
-                error_handler=self.refresh_error_cb)
-            self.on_office_status_changed (1)
+        self.office.refresh ()
+        self.on_office_status_changed (1)
+        self.refresh_reply_cb ()
 
 
         self.office.connect_to_signal \
@@ -54,8 +51,7 @@ class Notification:
 
     def on_link_refresh_clicked (self, link, data=None):
         print "on_link_refresh_clicked"
-        self.office.refresh (reply_handler=self.refresh_reply_cb, \
-            error_handler=self.refresh_error_cb)
+        self.office.refresh ()
 
     def on_button_share_clicked (self, button, data=None):
         print "on_button_share_clicked"

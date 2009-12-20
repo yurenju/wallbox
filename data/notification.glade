@@ -116,6 +116,16 @@
                 <property name="position">0</property>
               </packing>
             </child>
+            <child>
+              <object class="GtkImage" id="refresh_animation">
+                <property name="visible">True</property>
+                <property name="xalign">0.10000000149011612</property>
+                <property name="stock">gtk-missing-image</property>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="expand">False</property>

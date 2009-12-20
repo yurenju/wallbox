@@ -7,22 +7,67 @@ import dbus
 import dbus.mainloop.glib
 import notification
 import comment
+import os
+import os.path
+import ConfigParser
 
-def show_notification (icon, n):
-    if n.window.get_property ("visible"):
-        n.window.hide ()
-        if n.comment != None:
-            n.comment.window.destroy ()
-    else:
-        (screen, rect, orientation) = icon.get_geometry ()
-        n.window.move (rect.x, rect.y+10)
-        n.window.show ()
-        n.entry_status.grab_focus ()
+class wallbox:
+    config_parser = None
+
+    def __init__ (self):
+
+        bus = dbus.SessionBus ()
+        obj = bus.get_object ("org.wallbox.PostOfficeService", \
+            "/org/wallbox/PostOfficeObject")
+
+        self.office = dbus.Interface \
+            (obj, "org.wallbox.PostOfficeInterface")
+
+        config_dir = os.path.expanduser ("~/.config")
+        if not os.path.exists (config_dir):
+            os.mkdir (config_dir)
+
+        self.config_parser = ConfigParser.ConfigParser ()
+        self.config_parser.read (config_dir + "/wallbox.conf")
+        if not self.config_parser.has_section ("general"):
+            self.config_parser.add_section ("general")
+
+        try:
+            self.refresh_interval = self.config_parser.getint ("general", "refresh_interval")
+        except ConfigParser.NoOptionError:
+            self.refresh_interval = 60
+            self.config_parser.set ("general", "refresh_interval", 60)
+
+        try:
+            self.notification_num = self.config_parser.getint("general", "notification_num")
+        except ConfigParser.NoOptionError:
+            self.notification_num = 10
+            self.config_parser.set ("general", "notification_num", 10)
+
+        self.office.set_refresh_interval (self.refresh_interval)
+        self.office.set_notification_num (self.notification_num)
+
+        with open (config_dir + "/wallbox.conf", 'wb') as configfile:
+            self.config_parser.write (configfile)
+
+        status_icon = gtk.status_icon_new_from_stock (gtk.STOCK_OPEN)
+        n = notification.Notification ()
+        status_icon.connect ("activate", self.show_notification, n)
+
+    def show_notification (self, icon, n):
+        if n.window.get_property ("visible"):
+            n.window.hide ()
+            if n.comment != None:
+                n.comment.window.destroy ()
+        else:
+            (screen, rect, orientation) = icon.get_geometry ()
+            n.window.move (rect.x, rect.y+10)
+            n.window.show ()
+            n.entry_status.grab_focus ()
+
+
 
 if __name__ == "__main__":
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-
-    status_icon = gtk.status_icon_new_from_stock (gtk.STOCK_OPEN)
-    n = notification.Notification ()
-    status_icon.connect ("activate", show_notification, n)
+    w = wallbox ()
     gtk.main ()

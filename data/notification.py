@@ -39,7 +39,7 @@ class Notification:
                     continue
 
         self.init_view ()
-        
+
         if offline:
             self.refresh_reply_cb ()
         else:

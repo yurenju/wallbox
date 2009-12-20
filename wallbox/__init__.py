@@ -230,6 +230,17 @@ class PostOffice (dbus.service.Object):
             print "DBus interface registration failed - other wallbox running somewhere"
             pass
 
+    
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='')
+    def notification_mark_all_read (self):
+        ids = []
+        for entry in self.notification:
+            if entry['is_unread']:
+                ids.append (entry['notification_id'])
+        if len (ids) == 0:
+            return
+        self.fb ("notifications_markRead", {"session_key": self.session['session_key'], "notification_ids": ids})
+
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='i')
     def get_office_status (self):
         return self.office_status
@@ -255,6 +266,8 @@ class PostOffice (dbus.service.Object):
         self.uid = self.fb.users.getInfo ([self.fb.uid])[0]['uid']
         self.user_ids.append (self.uid)
         self.status_changed (IS_LOGIN)
+
+        gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='a{sv}')
     def get_session (self):
@@ -346,11 +359,10 @@ class PostOffice (dbus.service.Object):
         self.status_changed (self.orig_office_status)
         return False
 
-    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='')
-    def refresh (self):
+    def _refresh (self):
         if self.office_status != IS_LOGIN:
             print "not IS_LOGIN"
-            return
+            return True
 
         self.orig_office_status = self.office_status
         self.status_changed (REFRESHING)
@@ -360,6 +372,11 @@ class PostOffice (dbus.service.Object):
         self.rs.start ()
         gobject.timeout_add (1000, self.check_refresh_complete)
 
+        return True
+
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='')
+    def refresh (self):
+        self._refresh ()
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='')
     def post_status (self, text):

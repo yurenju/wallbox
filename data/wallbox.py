@@ -52,7 +52,12 @@ class wallbox:
 
         status_icon = gtk.status_icon_new_from_stock (gtk.STOCK_OPEN)
         n = notification.Notification ()
+        self.status_icon = status_icon
         status_icon.connect ("activate", self.show_notification, n)
+        n.connect ("has-unread", self.has_unread)
+
+    def has_unread (self, data=None):
+        self.status_icon.set_blinking (True)
 
     def show_notification (self, icon, n):
         if n.window.get_property ("visible"):
@@ -60,6 +65,8 @@ class wallbox:
             if n.comment != None:
                 n.comment.window.destroy ()
         else:
+            self.status_icon.set_blinking (False)
+            self.office.notification_mark_all_read ()
             (screen, rect, orientation) = icon.get_geometry ()
             n.window.move (rect.x, rect.y+10)
             n.window.show ()

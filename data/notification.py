@@ -8,9 +8,12 @@ import dbus.mainloop.glib
 import comment
 import sys
 import time
+import gobject
 
-class Notification:
+class Notification (gobject.GObject):
+
     def __init__ (self, offline=False):
+        gobject.GObject.__init__(self)
         self.comment = None
         self.builder = gtk.Builder ()
         self.builder.add_from_file ("notification.glade")
@@ -18,6 +21,10 @@ class Notification:
         self.window = self.builder.get_object ("notification_window")
         self.window.connect ("configure-event", self.on_window_resize)
         self.entry_status = self.builder.get_object ("entry_status")
+
+        gobject.signal_new \
+            ("has-unread", Notification, gobject.SIGNAL_RUN_LAST, \
+            gobject.TYPE_NONE, ())
 
         bus = dbus.SessionBus ()
         obj = bus.get_object ("org.wallbox.PostOfficeService", \
@@ -162,10 +169,15 @@ class Notification:
         nlist = self.office.get_notification_list ()
         liststore = self.builder.get_object ("list_notification")
         liststore.clear ()
+        has_unread = False
         for nid in nlist:
             entry = self.office.get_notification_entry (nid)
             text = None
             has_detail = False
+            
+            if entry['is_unread'] == True:
+                has_unread = True
+
             if len (entry['body_text']) == 0:
                 text = entry['title_text']
             else:
@@ -175,6 +187,9 @@ class Notification:
                 has_detail = True
             liststore.append \
                 ([entry['app_id'], text, has_detail, int(entry['notification_id'])])
+
+        if has_unread == True:
+            self.emit ("has-unread")
 
     def refresh_error_cb (self, e):
         print e

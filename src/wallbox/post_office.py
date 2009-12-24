@@ -16,6 +16,7 @@ import secert
 import threading
 import gtk
 import pickle
+import socket
 
 __author__ = 'Yuren Ju <yurenju@gmail.com>'
 
@@ -159,16 +160,24 @@ class RefreshProcess (threading.Thread):
             self.fb.users.getInfo (self.user_ids, ["name", "pic_square"])
 
 
+        default_timeout = socket.getdefaulttimeout ()
         for u in self.users:
             if (u['pic_square'] != None and len (u['pic_square']) > 0):
                 icon_name = \
                     os.path.basename \
                     (urlparse.urlsplit (u['pic_square']).path)
 
-                urllib.urlretrieve \
-                    (u['pic_square'], "%s/%s" % \
-                    (self.user_icons_dir, icon_name))
-                u['pic_square_local'] = icon_name
+                print "retrieve: %s, %s" % (u['name'], u['pic_square'])
+                socket.setdefaulttimeout (2)
+                try:
+                    urllib.urlretrieve \
+                        (u['pic_square'], "%s/%s" % \
+                        (self.user_icons_dir, icon_name))
+                    u['pic_square_local'] = icon_name
+                except:
+                    print "retrieve timeout"
+                    u['pic_square_local'] = None
+        socket.setdefaulttimeout (default_timeout)
 
     def get_remote_applications_icon (self):
         print "get remote applications icon"
@@ -177,9 +186,14 @@ class RefreshProcess (threading.Thread):
                 self.app_ids.append (n['app_id'])
 
         for app_id in self.app_ids:
-            app = self.fb.fql.query \
-                ("SELECT icon_url FROM application WHERE app_id='%d'" % \
-                app_id)[0]
+            result = self.fb.fql.query \
+                ("SELECT icon_url FROM application WHERE app_id='%d'" % int (app_id))
+
+            if len (result) < 1:
+                print "get_remote_applications_icon no result"
+                continue
+
+            app = result[0]
 
             icon_name = os.path.basename \
                 (urlparse.urlsplit (app['icon_url']).path)
@@ -343,7 +357,7 @@ class PostOffice (dbus.service.Object):
             output.close ()
 
     def check_refresh_complete (self):
-        if self.rs.is_alive ():
+        if self.rs.isAlive ():
             return True
 
         self.current_status = self.rs.current_status

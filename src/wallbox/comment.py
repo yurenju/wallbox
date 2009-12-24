@@ -67,7 +67,7 @@ class Comment:
         except:
             print "no icon: comment.py:59 [%s]" % icon_path
             img_file = pkg_resources.resource_filename \
-                        (__name__, "data/q_silhouette.gif")
+                        (__name__, "data/images/q_silhouette.gif")
             icon = gtk.image_new_from_file (img_file)
             pixbuf = icon.get_pixbuf ()
             
@@ -118,13 +118,17 @@ class Comment:
             icon_path = "%s/%s" % (icons_dir, user['pic_square_local'])
             icon = gtk.image_new_from_file (icon_path)
         else:
-            icon = gtk.image_new_from_file ("images/q_silhouette.gif")
+            img_file = pkg_resources.resource_filename \
+                        (__name__, "data/images/q_silhouette.gif")
+            icon = gtk.image_new_from_file (img_file)
 
         try:
             pixbuf = icon.get_pixbuf ()
         except:
             print "no icon: comment.py:116 [%s]" % icon_path
-            icon = gtk.image_new_from_file ("images/q_silhouette.gif")
+            img_file = pkg_resources.resource_filename \
+                        (__name__, "data/images/q_silhouette.gif")
+            icon = gtk.image_new_from_file (img_file)
             pixbuf = icon.get_pixbuf ()
 
         scaled_buf = \

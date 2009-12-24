@@ -93,6 +93,10 @@ class RefreshProcess (threading.Thread):
             "is_hidden, href, app_id, sender_id " + \
             "FROM notification WHERE recipient_id = '%s' LIMIT %s" % \
             (self.uid, self.notification_num))
+        for n in notification:
+            for skey in n:
+                if n[skey] == None:
+                    n[skey] = ""
         self.notification = notification
 
     def get_remote_comments (self):
@@ -161,6 +165,7 @@ class RefreshProcess (threading.Thread):
 
 
         default_timeout = socket.getdefaulttimeout ()
+        socket.setdefaulttimeout (2)
         for u in self.users:
             if (u['pic_square'] != None and len (u['pic_square']) > 0):
                 icon_name = \
@@ -168,7 +173,6 @@ class RefreshProcess (threading.Thread):
                     (urlparse.urlsplit (u['pic_square']).path)
 
                 print "retrieve: %s, %s" % (u['name'], u['pic_square'])
-                socket.setdefaulttimeout (2)
                 try:
                     urllib.urlretrieve \
                         (u['pic_square'], "%s/%s" % \
@@ -176,7 +180,7 @@ class RefreshProcess (threading.Thread):
                     u['pic_square_local'] = icon_name
                 except:
                     print "retrieve timeout"
-                    u['pic_square_local'] = None
+                    u['pic_square_local'] = ""
         socket.setdefaulttimeout (default_timeout)
 
     def get_remote_applications_icon (self):
@@ -185,7 +189,10 @@ class RefreshProcess (threading.Thread):
             if not n['app_id'] in self.app_ids:
                 self.app_ids.append (n['app_id'])
 
+        default_timeout = socket.getdefaulttimeout ()
+        socket.setdefaulttimeout (2)
         for app_id in self.app_ids:
+            print "app_id: %s" % app_id
             result = self.fb.fql.query \
                 ("SELECT icon_url FROM application WHERE app_id='%d'" % int (app_id))
 
@@ -198,9 +205,15 @@ class RefreshProcess (threading.Thread):
             icon_name = os.path.basename \
                 (urlparse.urlsplit (app['icon_url']).path)
                 
-            urllib.urlretrieve \
-                (app['icon_url'], "%s/%s" % (self.app_icons_dir, icon_name))
+            try:
+                urllib.urlretrieve \
+                    (app['icon_url'], "%s/%s" % (self.app_icons_dir, icon_name))
+            except:
+                print "retrieve timeout"
+                icon_name = ""
+
             self.applications[app_id] = {'icon_name': icon_name}
+        socket.setdefaulttimeout (default_timeout)
 
     def run (self):
         self.get_remote_current_status ()

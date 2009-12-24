@@ -152,7 +152,11 @@ class Notification (gobject.GObject):
         app_id = model.get_value (iter, 0)
         app = self.office.get_application (app_id)
         icons_dir = self.office.get_app_icons_dir ()
-        icon = gtk.image_new_from_file ("%s/%s" % (icons_dir, app['icon_name']))
+        icon = None
+        if app['icon_name'] != "":
+            icon = gtk.image_new_from_file ("%s/%s" % (icons_dir, app['icon_name']))
+        else:
+            icon = gtk.image_new_from_stock (gtk.STOCK_MISSING_IMAGE, 32)
         cell.set_property ('pixbuf', icon.get_pixbuf())
 
     def make_arrow (self, column, cell, model, iter):

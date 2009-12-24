@@ -10,6 +10,9 @@ import comment
 import os
 import os.path
 import ConfigParser
+from subprocess import Popen, PIPE
+import pkg_resources
+import time
 
 class wallbox:
     config_parser = None
@@ -47,8 +50,8 @@ class wallbox:
         self.office.set_refresh_interval (self.refresh_interval)
         self.office.set_notification_num (self.notification_num)
 
-        with open (config_dir + "/wallbox.conf", 'wb') as configfile:
-            self.config_parser.write (configfile)
+        configfile = open (config_dir + "/wallbox.conf", 'wb')
+        self.config_parser.write (configfile)
 
         status_icon = gtk.status_icon_new_from_stock (gtk.STOCK_OPEN)
         n = notification.Notification ()
@@ -72,9 +75,23 @@ class wallbox:
             n.window.show ()
             n.entry_status.grab_focus ()
 
-
-
-if __name__ == "__main__":
+def run_post_office ():
+    bus = dbus.SessionBus ()
+    try:
+        obj = bus.get_object ("org.wallbox.PostOfficeService", \
+            "/org/wallbox/PostOfficeObject")
+    except:
+        print "execute post_office.py"
+        office = pkg_resources.resource_filename \
+                    (__name__, "post_office.py")
+        Popen ([office], shell=True)
+        time.sleep (1)
+        
+def run_wallbox ():
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+    run_post_office ()
     w = wallbox ()
     gtk.main ()
+
+if __name__ == "__main__":
+    run_wallbox ()

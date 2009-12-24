@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 
 from setuptools import setup, find_packages
-import ez_setup
-
-ez_setup.use_setuptools ()
 
 setup (
     name = "wallbox",
@@ -18,4 +15,10 @@ setup (
     author_email = "yurenju@gmail.com",
     description = "Facebook notification for Linux",
     license = "GPL",
+
+    entry_points = {
+        'gui_scripts': [
+            'wallbox = wallbox.wallbox:run_wallbox',
+        ],
+    },
 )

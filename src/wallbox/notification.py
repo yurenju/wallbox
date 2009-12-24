@@ -9,6 +9,7 @@ import comment
 import sys
 import time
 import gobject
+import pkg_resources
 
 class Notification (gobject.GObject):
 
@@ -16,7 +17,11 @@ class Notification (gobject.GObject):
         gobject.GObject.__init__(self)
         self.comment = None
         self.builder = gtk.Builder ()
-        self.builder.add_from_file ("notification.glade")
+
+        ui_file = pkg_resources.resource_filename \
+                    (__name__, "data/notification.ui")
+
+        self.builder.add_from_file (ui_file)
         self.builder.connect_signals (self, None)
         self.window = self.builder.get_object ("notification_window")
         self.window.connect ("configure-event", self.on_window_resize)

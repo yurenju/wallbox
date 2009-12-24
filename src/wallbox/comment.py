@@ -6,6 +6,7 @@ import gtk
 import dbus
 import dbus.mainloop.glib
 import sys
+import pkg_resources
 
 COMMENT_ICON_SIZE = 30
 MAIN_ICON_SIZE = 50
@@ -17,7 +18,11 @@ class Comment:
     def __init__ (self, post_id):
         self.post_id = post_id
         self.builder = gtk.Builder ()
-        self.builder.add_from_file ("comment.glade")
+
+        ui_file = pkg_resources.resource_filename \
+                    (__name__, "data/comment.ui")
+
+        self.builder.add_from_file (ui_file)
         self.builder.connect_signals (self, None)
         self.window = self.builder.get_object ("comment_window")
         self.window.show ()
@@ -61,7 +66,9 @@ class Comment:
             pixbuf = gtk.image_new_from_file (icon_path).get_pixbuf ()
         except:
             print "no icon: comment.py:59 [%s]" % icon_path
-            icon = gtk.image_new_from_file ("images/q_silhouette.gif")
+            img_file = pkg_resources.resource_filename \
+                        (__name__, "data/q_silhouette.gif")
+            icon = gtk.image_new_from_file (img_file)
             pixbuf = icon.get_pixbuf ()
             
         scaled_buf = \

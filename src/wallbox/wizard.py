@@ -4,11 +4,15 @@ import pygtk
 pygtk.require ("2.0")
 import gtk
 import dbus
+import pkg_resources
 
 class Wizard:
     def __init__ (self):
         self.builder = gtk.Builder ()
-        self.builder.add_from_file ("wizard.glade")
+        ui_file = pkg_resources.resource_filename \
+                    (__name__, "data/wizard.ui")
+
+        self.builder.add_from_file (ui_file)
         self.assistant = self.builder.get_object ("wizard_welcome")
         self.assistant.set_page_complete (self.assistant.get_nth_page (0), True)
         self.assistant.set_page_complete (self.assistant.get_nth_page (3), True)

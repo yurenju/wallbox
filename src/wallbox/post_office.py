@@ -160,7 +160,7 @@ class RefreshProcess (threading.Thread):
 
 
         for u in self.users:
-            if (len (u['pic_square']) > 0):
+            if (u['pic_square'] != None and len (u['pic_square']) > 0):
                 icon_name = \
                     os.path.basename \
                     (urlparse.urlsplit (u['pic_square']).path)

@@ -234,13 +234,17 @@ class RefreshProcess (threading.Thread):
                         print "timeout"
                         u['pic_square_local'] = ""
                     except NoUpdateError:
-                        print "No need update"
-                        u['pic_square_local'] = os.path.basename \
+                        icon_name = os.path.basename \
                             (urlparse.urlsplit (u['pic_square']).path)
+                        print "No need update: %s" % icon_name
+                        u['pic_square_local'] = icon_name
                         
                 else:
                     print "timeout 3 times"
                     u['pic_square_local'] = ""
+            else:
+                u['pic_square_local'] = ""
+                
         socket.setdefaulttimeout (default_timeout)
 
     def get_remote_applications_icon (self):
@@ -527,7 +531,7 @@ class PostOffice (dbus.service.Object):
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='x', out_signature='a{sv}')
     def get_user (self, uid):
         for u in self.users:
-            if u['uid'] == uid:
+            if int (u['uid']) == int (uid):
                 return u
         return {}
 

@@ -205,9 +205,16 @@ class RefreshProcess (threading.Thread):
         default_timeout = socket.getdefaulttimeout ()
         socket.setdefaulttimeout (GET_ICON_TIMEOUT)
         print "socket timeout: %s" % socket.getdefaulttimeout ()
+        timeout_count = 0
         for u in self.users:
             if (u['pic_square'] != None and len (u['pic_square']) > 0):
-                u['pic_square_local'] = self.get_remote_icon (u['pic_square'], self.user_icons_dir)
+                if timeout_count < 3:
+                    u['pic_square_local'] = self.get_remote_icon (u['pic_square'], self.user_icons_dir)
+                    if len (u['pic_square_local']) == 0:
+                        timeout_count += 1
+                else:
+                    print "timeout 3 times"
+                    u['pic_square_local'] = ""
         socket.setdefaulttimeout (default_timeout)
 
     def get_remote_applications_icon (self):
@@ -219,6 +226,7 @@ class RefreshProcess (threading.Thread):
         default_timeout = socket.getdefaulttimeout ()
         socket.setdefaulttimeout (GET_ICON_TIMEOUT)
         print "socket timeout: %s" % socket.getdefaulttimeout ()
+        timeout_count = 0
         for app_id in self.app_ids:
             print "app_id: %s" % app_id
             result = self.fb.fql.query \
@@ -229,7 +237,12 @@ class RefreshProcess (threading.Thread):
                 continue
 
             app = result[0]
-            icon_name = self.get_remote_icon (app['icon_url'], self.app_icons_dir)
+            if timeout_count < 3:
+                icon_name = self.get_remote_icon (app['icon_url'], self.app_icons_dir)
+                if len (icon_name) == 0:
+                    timeout_count += 1
+            else:
+                icon_name = ""
             self.applications[app_id] = {'icon_name': icon_name}
         socket.setdefaulttimeout (default_timeout)
 

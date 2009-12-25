@@ -14,6 +14,12 @@ from subprocess import Popen, PIPE
 import pkg_resources
 import time
 
+def read_all_reply_handler (reply=None):
+    pass
+
+def read_all_error_handler (error=None):
+    pass
+
 class wallbox:
     config_parser = None
 
@@ -69,7 +75,8 @@ class wallbox:
                 n.comment.window.destroy ()
         else:
             self.status_icon.set_blinking (False)
-            self.office.notification_mark_all_read ()
+            self.office.notification_mark_all_read \
+                (reply_handler=read_all_reply_handler, error_handler=read_all_error_handler)
             (screen, rect, orientation) = icon.get_geometry ()
             n.window.move (rect.x, rect.y+10)
             n.window.show ()

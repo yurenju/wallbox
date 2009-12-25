@@ -8,6 +8,7 @@ import facebook
 import subprocess
 import os
 import urllib
+import urllib2
 import urlparse
 import time
 import re
@@ -24,6 +25,8 @@ IS_LOGIN = 0
 REFRESHING = 1
 WAITING_LOGIN = 2
 NO_LOGIN = 3
+
+GET_ICON_TIMEOUT = 3
 
 gtk.gdk.threads_init()
 
@@ -66,7 +69,7 @@ class RefreshProcess (threading.Thread):
             print "nids: ",
             for n in self.status[skey]['notification_ids']:
                 print "%s, " % n,
-            print "\n=== END === dump status"
+        print "\n=== END === dump status"
 
     def _query (self, query_str):
         for i in range (3):
@@ -81,7 +84,8 @@ class RefreshProcess (threading.Thread):
             
     def get_remote_current_status (self):
         print "get remote current status"
-        qstr = "SELECT uid, status_id, message, source FROM status WHERE uid='%s' LIMIT 1" % self.uid
+        qstr = "SELECT uid, status_id, message, " + \
+                "source FROM status WHERE uid='%s' LIMIT 1" % self.uid
         status = self._query (qstr)
 
         self.current_status = status[0]
@@ -89,8 +93,8 @@ class RefreshProcess (threading.Thread):
     def get_remote_notification (self):
         print "get remote notification"
         notification = self._query \
-            ("SELECT notification_id, title_text, body_text, is_unread, " + \
-            "is_hidden, href, app_id, sender_id " + \
+            ("SELECT notification_id, title_text, body_text, is_unread" + \
+            ", is_hidden, href, app_id, sender_id " + \
             "FROM notification WHERE recipient_id = '%s' LIMIT %s" % \
             (self.uid, self.notification_num))
         for n in notification:
@@ -107,7 +111,7 @@ class RefreshProcess (threading.Thread):
         new_status = {}
         for n in self.notification:
             print "app_id: %s: %s" % (n['app_id'], n['body_text'])
-            if n['app_id'] == 19675640871:
+            if int (n['app_id']) == 19675640871:
                 #get post_id
                 post_id = None
                 m_id = pattern_id.search (n['href'])
@@ -150,6 +154,40 @@ class RefreshProcess (threading.Thread):
             del self.notification[ni]
         self._dump_status ()
 
+    def get_remote_icon (self, url, local_path):
+        local_size = 0
+
+        try:
+            print "urlopen..."
+            remote_icon = urllib2.urlopen (url)
+        except:
+            print "retrieve timeout"
+            return ""
+
+        info = remote_icon.info ()
+        remote_size = int (info.get ("Content-Length"))
+        remote_icon.close ()
+
+        icon_name = os.path.basename \
+            (urlparse.urlsplit (url).path)
+
+        full_path = "%s/%s" % (local_path, icon_name)
+
+        if os.path.exists (full_path) and os.path.isfile (full_path):
+            local_size = os.path.getsize (full_path)
+
+        if remote_size != local_size or not os.path.exists (full_path):
+            print "size different remote/local: %d/%d, start dwonload icon" % (remote_size, local_size)
+            try:
+                urllib.urlretrieve (url, full_path)
+                return icon_name
+            except:
+                print "retrieve timeout"
+                return ""
+        else:
+            print "icon already exist: %s" % icon_name
+            return icon_name
+
     def get_remote_users_icon (self):
         print "get remote users icon"
         for n in self.notification:
@@ -165,32 +203,22 @@ class RefreshProcess (threading.Thread):
 
 
         default_timeout = socket.getdefaulttimeout ()
-        socket.setdefaulttimeout (2)
+        socket.setdefaulttimeout (GET_ICON_TIMEOUT)
+        print "socket timeout: %s" % socket.getdefaulttimeout ()
         for u in self.users:
             if (u['pic_square'] != None and len (u['pic_square']) > 0):
-                icon_name = \
-                    os.path.basename \
-                    (urlparse.urlsplit (u['pic_square']).path)
-
-                print "retrieve: %s, %s" % (u['name'], u['pic_square'])
-                try:
-                    urllib.urlretrieve \
-                        (u['pic_square'], "%s/%s" % \
-                        (self.user_icons_dir, icon_name))
-                    u['pic_square_local'] = icon_name
-                except:
-                    print "retrieve timeout"
-                    u['pic_square_local'] = ""
+                u['pic_square_local'] = self.get_remote_icon (u['pic_square'], self.user_icons_dir)
         socket.setdefaulttimeout (default_timeout)
 
     def get_remote_applications_icon (self):
         print "get remote applications icon"
         for n in self.notification:
             if not n['app_id'] in self.app_ids:
-                self.app_ids.append (n['app_id'])
+                self.app_ids.append (int (n['app_id']))
 
         default_timeout = socket.getdefaulttimeout ()
-        socket.setdefaulttimeout (2)
+        socket.setdefaulttimeout (GET_ICON_TIMEOUT)
+        print "socket timeout: %s" % socket.getdefaulttimeout ()
         for app_id in self.app_ids:
             print "app_id: %s" % app_id
             result = self.fb.fql.query \
@@ -201,17 +229,7 @@ class RefreshProcess (threading.Thread):
                 continue
 
             app = result[0]
-
-            icon_name = os.path.basename \
-                (urlparse.urlsplit (app['icon_url']).path)
-                
-            try:
-                urllib.urlretrieve \
-                    (app['icon_url'], "%s/%s" % (self.app_icons_dir, icon_name))
-            except:
-                print "retrieve timeout"
-                icon_name = ""
-
+            icon_name = self.get_remote_icon (app['icon_url'], self.app_icons_dir)
             self.applications[app_id] = {'icon_name': icon_name}
         socket.setdefaulttimeout (default_timeout)
 
@@ -431,6 +449,7 @@ class PostOffice (dbus.service.Object):
     def get_status_with_nid (self, nid):
         print "get_status_with_nid: %s" % nid
         result = None
+        print "status len: %s" % len(self.status)
         for key in self.status:
             print "looking id: ",
             for id in self.status[key]['notification_ids']:

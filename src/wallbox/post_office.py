@@ -326,7 +326,11 @@ class PostOffice (dbus.service.Object):
                 ids.append (entry['notification_id'])
         if len (ids) == 0:
             return
-        self.fb ("notifications_markRead", {"session_key": self.session['session_key'], "notification_ids": ids})
+        try:
+            self.fb ("notifications_markRead", \
+                {"session_key": self.session['session_key'], "notification_ids": ids})
+        except:
+            print "notification_mark_all_read failed"
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='i')
     def get_office_status (self):

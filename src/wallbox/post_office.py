@@ -30,6 +30,18 @@ GET_ICON_TIMEOUT = 3
 
 gtk.gdk.threads_init()
 
+class TimeoutError(Exception):
+    def __init__ (self, value):
+        self.value = value
+    def __str__ (self):
+        return repr (self.value)
+
+class NoUpdateError(Exception):
+    def __init__ (self, value):
+        self.value = value
+    def __str__ (self):
+        return repr (self.value)
+
 class RefreshProcess (threading.Thread):
     def __init__ (self, notification_num, fb, uid, user_icons_dir, app_icons_dir, user_ids):
         threading.Thread.__init__ (self)
@@ -111,7 +123,7 @@ class RefreshProcess (threading.Thread):
         new_status = {}
         for n in self.notification:
             print "app_id: %s: %s" % (n['app_id'], n['body_text'])
-            if int (n['app_id']) == 19675640871:
+            if n['app_id'] == '19675640871':
                 #get post_id
                 post_id = None
                 m_id = pattern_id.search (n['href'])
@@ -157,24 +169,29 @@ class RefreshProcess (threading.Thread):
     def get_remote_icon (self, url, local_path):
         local_size = 0
 
-        try:
-            print "urlopen..."
-            remote_icon = urllib2.urlopen (url)
-        except:
-            print "retrieve timeout"
-            return ""
-
-        info = remote_icon.info ()
-        remote_size = int (info.get ("Content-Length"))
-        remote_icon.close ()
-
         icon_name = os.path.basename \
             (urlparse.urlsplit (url).path)
 
         full_path = "%s/%s" % (local_path, icon_name)
 
         if os.path.exists (full_path) and os.path.isfile (full_path):
+            #if modification time < 24hr, ignore update
+            mtime = os.path.getmtime (full_path)
+            if time.time() - mtime < 60 * 60 * 24: #24hr
+                raise NoUpdateError ("mtime is %s, ignore update icon: %s" % (mtime, icon_name))
+
             local_size = os.path.getsize (full_path)
+
+        try:
+            print "urlopen: %s" % url
+            remote_icon = urllib2.urlopen (url)
+        except:
+            raise TimeoutError ("urlopen timeout")
+
+        info = remote_icon.info ()
+        remote_size = int (info.get ("Content-Length"))
+        remote_icon.close ()
+
 
         if remote_size != local_size or not os.path.exists (full_path):
             print "size different remote/local: %d/%d, start dwonload icon" % (remote_size, local_size)
@@ -182,8 +199,8 @@ class RefreshProcess (threading.Thread):
                 urllib.urlretrieve (url, full_path)
                 return icon_name
             except:
-                print "retrieve timeout"
-                return ""
+                raise TimeoutError ("urlretrieve timeout")
+
         else:
             print "icon already exist: %s" % icon_name
             return icon_name
@@ -209,9 +226,18 @@ class RefreshProcess (threading.Thread):
         for u in self.users:
             if (u['pic_square'] != None and len (u['pic_square']) > 0):
                 if timeout_count < 3:
-                    u['pic_square_local'] = self.get_remote_icon (u['pic_square'], self.user_icons_dir)
-                    if len (u['pic_square_local']) == 0:
+                    try:
+                        u['pic_square_local'] = \
+                            self.get_remote_icon (u['pic_square'], self.user_icons_dir)
+                    except TimeoutError:
                         timeout_count += 1
+                        print "timeout"
+                        u['pic_square_local'] = ""
+                    except NoUpdateError:
+                        print "No need update"
+                        u['pic_square_local'] = os.path.basename \
+                            (urlparse.urlsplit (u['pic_square']).path)
+                        
                 else:
                     print "timeout 3 times"
                     u['pic_square_local'] = ""
@@ -221,29 +247,32 @@ class RefreshProcess (threading.Thread):
         print "get remote applications icon"
         for n in self.notification:
             if not n['app_id'] in self.app_ids:
-                self.app_ids.append (int (n['app_id']))
+                self.app_ids.append (n['app_id'])
+
+        ids_str = ", ".join (self.app_ids)
+        qstr = "SELECT icon_url, app_id FROM application WHERE app_id IN (%s)" % ids_str
+        print "qstr: %s" % qstr
+        apps = self.fb.fql.query (qstr)
 
         default_timeout = socket.getdefaulttimeout ()
         socket.setdefaulttimeout (GET_ICON_TIMEOUT)
         print "socket timeout: %s" % socket.getdefaulttimeout ()
         timeout_count = 0
-        for app_id in self.app_ids:
-            print "app_id: %s" % app_id
-            result = self.fb.fql.query \
-                ("SELECT icon_url FROM application WHERE app_id='%d'" % int (app_id))
-
-            if len (result) < 1:
-                print "get_remote_applications_icon no result"
-                continue
-
-            app = result[0]
+        for app in apps:
             if timeout_count < 3:
-                icon_name = self.get_remote_icon (app['icon_url'], self.app_icons_dir)
-                if len (icon_name) == 0:
+                try:
+                    icon_name = self.get_remote_icon (app['icon_url'], self.app_icons_dir)
+                except TimeoutError:
+                    print "timeout"
                     timeout_count += 1
+                    icon_name = ""
+                except NoUpdateError:
+                    print "No need update"
+                    icon_name = os.path.basename \
+                            (urlparse.urlsplit (app['icon_url']).path)
             else:
                 icon_name = ""
-            self.applications[app_id] = {'icon_name': icon_name}
+            self.applications[app['app_id']] = {'icon_name': icon_name}
         socket.setdefaulttimeout (default_timeout)
 
     def run (self):
@@ -481,7 +510,7 @@ class PostOffice (dbus.service.Object):
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='a{sv}')
     def get_application (self, app_id):
-        return self.applications[int (app_id)]
+        return self.applications[app_id]
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='a{sv}')
     def get_current_user (self):

@@ -119,51 +119,51 @@ class RefreshProcess (threading.Thread):
         print "get remote comments"
         pattern_id = re.compile ("&id=(\d+)")
         pattern_fbid = re.compile ("story_fbid=(\d+)")
-        delete_n= []
         new_status = {}
-        for n in self.notification:
-            print "app_id: %s: %s" % (n['app_id'], n['body_text'])
-            if n['app_id'] == '19675640871':
-                #get post_id
-                post_id = None
-                m_id = pattern_id.search (n['href'])
-                m_fbid = pattern_fbid.search (n['href'])
 
-                if m_id != None and m_fbid != None:
-                    id = m_id.group (1)
-                    status_id = m_fbid.group (1)
-                    post_id = "%s_%s" % (id, status_id)
-                    if not new_status.has_key (post_id):
-                        new_status[post_id] = {}
-                        qstr = "SELECT uid, time, message, status_id FROM status " + \
-                            "WHERE uid = %s AND status_id = %s LIMIT 1" % \
-                            (id, status_id)
-                        result = self._query (qstr)
+        matched_ns = [n for n in self.notification if n['app_id'] == '19675640871']
+        post_ids = []
+        subquery = []
+        for n in matched_ns:
+            post_id = None
+            m_id = pattern_id.search (n['href'])
+            m_fbid = pattern_fbid.search (n['href'])
 
-                        if result != None and len (result) > 0:
-                            new_status[post_id] = result[0]
-                        else:
-                            print "can't get status_id"
-                            print "detail\n===\nbody: %s\nhref: %s\nquery str: %s\n===" % \
-                                (n['body_text'], n['href'], qstr)
-                            delete_n.append (n)
-                            del new_status[post_id]
-                            continue
+            if m_id != None and m_fbid != None:
+                mid = m_id.group (1)
+                status_id = m_fbid.group (1)
+                post_id = "%s_%s" % (mid, status_id)
 
-                        qstr = "SELECT id, fromid, text, time FROM comment WHERE post_id='%s'" % post_id
-                        comments = self._query (qstr)
+                post_ids.append ("'%s'" % post_id)
+                subquery.append ("(uid = '%s' AND status_id = '%s')" % (mid, status_id))
+                n['status_post_id'] = post_id
 
-                        new_status[post_id]['comments'] = comments
-                        #self._dump_comments (post_id, new_status)
-                    if not new_status[post_id].has_key ('notification_ids'):
-                        new_status[post_id]['notification_ids'] = []
-                    if not int (n['notification_id']) in new_status[post_id]['notification_ids']:
-                        new_status[post_id]['notification_ids'].append (int (n['notification_id']))
+        substr = " OR ".join (subquery)
+        qstr = "SELECT uid, time, message, status_id FROM status " + \
+            "WHERE %s" % substr
+        print "status query: " + qstr
+        result = self._query (qstr)
+        for r in result:
+            post_id = "%s_%s" % (r['uid'], r['status_id'])
+            new_status[post_id] = r
+
+            nids = [n['notification_id'] for n in matched_ns if n['status_post_id'] == post_id]
+            new_status[post_id]['notification_ids'] = nids
+
+        postids_str = ", ".join (post_ids)
+        qstr = "SELECT id, fromid, text, time, post_id FROM comment WHERE post_id IN (%s)" % postids_str
+        print "\ncomment: " + qstr
+        comments = self._query (qstr)
+
+        for c in comments:
+            post_id = c['post_id']
+            if new_status.has_key (post_id):
+                if new_status[post_id].has_key ('comments'):
+                    new_status[post_id]['comments'].append (c)
+                else:
+                    new_status[post_id]['comments'] = [c]
+
         self.status = new_status
-        for n in delete_n:
-            print "delete notification: %s" % n['body_text']
-            ni = self.notification.index (n)
-            del self.notification[ni]
         self._dump_status ()
 
     def get_remote_icon (self, url, local_path):
@@ -501,12 +501,10 @@ class PostOffice (dbus.service.Object):
         result = None
         print "status len: %s" % len(self.status)
         for key in self.status:
-            print "looking id: ",
-            for id in self.status[key]['notification_ids']:
-                print "%s, " % id,
-            print
+            print "looking id: %s\n" % self.status[key]['notification_ids']
+
             if self.status[key].has_key ('notification_ids') and \
-                nid in self.status[key]['notification_ids']:
+                str (nid) in self.status[key]['notification_ids']:
                 result = self.status[key].copy ()
                 if result.has_key ('comments'):
                     del result ['comments']

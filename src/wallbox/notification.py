@@ -46,8 +46,8 @@ class Notification (gobject.GObject):
                     self.office.login_completed ()
                     break
                 except:
-                    print "login failed, waiting 3 sec"
-                    time.sleep (3)
+                    print "login failed, waiting 5 sec"
+                    time.sleep (5)
                     continue
 
         self.init_view ()
@@ -150,7 +150,7 @@ class Notification (gobject.GObject):
 
     def make_icon (self, column, cell, model, iter):
         app_id = model.get_value (iter, 0)
-        app = self.office.get_application (app_id)
+        app = self.office.get_application (int(app_id))
         icons_dir = self.office.get_app_icons_dir ()
         icon = None
         if app['icon_name'] != "":

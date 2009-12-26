@@ -30,6 +30,13 @@ GET_ICON_TIMEOUT = 3
 
 gtk.gdk.threads_init()
 
+def touch(fname, times = None):
+    fhandle = file(fname, 'a')
+    try:
+        os.utime(fname, times)
+    finally:
+        fhandle.close()
+
 class TimeoutError(Exception):
     def __init__ (self, value):
         self.value = value
@@ -121,7 +128,7 @@ class RefreshProcess (threading.Thread):
         pattern_fbid = re.compile ("story_fbid=(\d+)")
         new_status = {}
 
-        matched_ns = [n for n in self.notification if str (n['app_id']) == '19675640871']
+        matched_ns = [n for n in self.notification if int (n['app_id']) == 19675640871]
         post_ids = []
         subquery = []
         for n in matched_ns:
@@ -200,9 +207,9 @@ class RefreshProcess (threading.Thread):
                 return icon_name
             except:
                 raise TimeoutError ("urlretrieve timeout")
-
         else:
             print "icon already exist: %s" % icon_name
+            touch (full_path)
             return icon_name
 
     def get_remote_users_icon (self):
@@ -251,7 +258,6 @@ class RefreshProcess (threading.Thread):
         print "get remote applications icon"
         for n in self.notification:
             if not str (n['app_id']) in self.app_ids:
-                print "app_ids: %s" % self.app_ids
                 self.app_ids.append (str (n['app_id']))
 
         ids_str = ", ".join (self.app_ids)
@@ -277,7 +283,7 @@ class RefreshProcess (threading.Thread):
                             (urlparse.urlsplit (app['icon_url']).path)
             else:
                 icon_name = ""
-            self.applications[app['app_id']] = {'icon_name': icon_name}
+            self.applications[int (app['app_id'])] = {'icon_name': icon_name}
         socket.setdefaulttimeout (default_timeout)
 
     def run (self):
@@ -515,7 +521,7 @@ class PostOffice (dbus.service.Object):
         return {}
     
 
-    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='a{sv}')
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='x', out_signature='a{sv}')
     def get_application (self, app_id):
         return self.applications[app_id]
 

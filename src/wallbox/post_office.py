@@ -121,7 +121,7 @@ class RefreshProcess (threading.Thread):
         pattern_fbid = re.compile ("story_fbid=(\d+)")
         new_status = {}
 
-        matched_ns = [n for n in self.notification if n['app_id'] == '19675640871']
+        matched_ns = [n for n in self.notification if str (n['app_id']) == '19675640871']
         post_ids = []
         subquery = []
         for n in matched_ns:
@@ -250,8 +250,9 @@ class RefreshProcess (threading.Thread):
     def get_remote_applications_icon (self):
         print "get remote applications icon"
         for n in self.notification:
-            if not n['app_id'] in self.app_ids:
-                self.app_ids.append (n['app_id'])
+            if not str (n['app_id']) in self.app_ids:
+                print "app_ids: %s" % self.app_ids
+                self.app_ids.append (str (n['app_id']))
 
         ids_str = ", ".join (self.app_ids)
         qstr = "SELECT icon_url, app_id FROM application WHERE app_id IN (%s)" % ids_str

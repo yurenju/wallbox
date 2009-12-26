@@ -50,7 +50,7 @@ class NoUpdateError(Exception):
         return repr (self.value)
 
 class RefreshProcess (threading.Thread):
-    def __init__ (self, notification_num, fb, uid, user_icons_dir, app_icons_dir, user_ids):
+    def __init__ (self, notification_num, fb, uid, user_icons_dir, app_icons_dir, user_ids, last_nid):
         threading.Thread.__init__ (self)
         self.uid = uid
         self.notification_num = notification_num
@@ -66,7 +66,7 @@ class RefreshProcess (threading.Thread):
         self.notification = []
         self.user_icons_dir = user_icons_dir
         self.app_icons_dir = app_icons_dir
-
+        self.last_nid = last_nid
     
     def _dump_comments (self, post_id):
         print "status: %s: %s" % (post_id, self.status[post_id]['message'])
@@ -120,6 +120,7 @@ class RefreshProcess (threading.Thread):
             for skey in n:
                 if n[skey] == None:
                     n[skey] = ""
+        self.last_nid = notification[0]['notification_id']
         self.notification = notification
 
     def get_remote_comments (self):
@@ -271,17 +272,30 @@ class RefreshProcess (threading.Thread):
             self.applications[int (app['app_id'])] = {'icon_name': icon_name}
         socket.setdefaulttimeout (default_timeout)
 
+    def get_remote_last_nid (self):
+        qstr = "SELECT notification_id FROM notification " + \
+                "WHERE recipient_id = %d LIMIT 1" % self.uid
+        result = self._query (qstr)
+        if len (result) > 0:
+            return result[0]['notification_id']
+        else:
+            return 0
+
     def run (self):
+        last_nid = self.get_remote_last_nid ()
+        if last_nid == self.last_nid:
+            print "no need to update notification"
+            return
         self.get_remote_current_status ()
-        time.sleep (2)
+        time.sleep (1)
         self.get_remote_notification ()
-        time.sleep (2)
+        time.sleep (1)
         self.get_remote_comments ()
-        time.sleep (2)
+        time.sleep (1)
         self.get_remote_users_icon ()
-        time.sleep (2)
+        time.sleep (1)
         self.get_remote_applications_icon ()
-        time.sleep (2)
+        time.sleep (1)
         self.updated_timestamp = datetime.date.today ()
         print "updated finish"
 
@@ -301,6 +315,7 @@ class PostOffice (dbus.service.Object):
         self.session = None
         self.api_key = '9103981b8f62c7dbede9757113372240'
         self.office_status = NO_LOGIN
+        self.last_nid = 0
         self.prepare_directories ()
         self.pickle_load ()
 
@@ -433,6 +448,11 @@ class PostOffice (dbus.service.Object):
         if self.rs.isAlive ():
             return True
 
+        if self.last_nid == self.rs.last_nid:
+            self.status_changed (self.orig_office_status)
+            return False
+
+        self.last_nid = self.rs.last_nid
         self.current_status = self.rs.current_status
         self.notification = self.rs.notification
         self.status = self.rs.status
@@ -455,7 +475,7 @@ class PostOffice (dbus.service.Object):
         self.status_changed (REFRESHING)
         print "notification_num: %s" % self.notification_num
         self.rs = RefreshProcess \
-            (self.notification_num, self.fb, self.uid, self.user_icons_dir, self.app_icons_dir, self.user_ids)
+            (self.notification_num, self.fb, self.uid, self.user_icons_dir, self.app_icons_dir, self.user_ids, self.last_nid)
         self.rs.start ()
         gobject.timeout_add (1000, self.check_refresh_complete)
 

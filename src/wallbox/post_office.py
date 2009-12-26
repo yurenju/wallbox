@@ -125,50 +125,35 @@ class RefreshProcess (threading.Thread):
     def get_remote_comments (self):
         print "get remote comments"
         pattern_id = re.compile ("&id=(\d+)")
-        pattern_fbid = re.compile ("story_fbid=(\d+)")
         new_status = {}
 
         matched_ns = [n for n in self.notification if int (n['app_id']) == 19675640871]
         post_ids = []
         subquery = []
         for n in matched_ns:
-            post_id = None
             m_id = pattern_id.search (n['href'])
-            m_fbid = pattern_fbid.search (n['href'])
 
-            if m_id != None and m_fbid != None:
-                mid = m_id.group (1)
-                status_id = m_fbid.group (1)
-                post_id = "%s_%s" % (mid, status_id)
-
-                post_ids.append ("'%s'" % post_id)
-                subquery.append ("(uid = '%s' AND status_id = '%s')" % (mid, status_id))
-                n['status_post_id'] = post_id
+            if m_id != None:
+                uid = m_id.group (1)
+                subquery.append ("(source_id = '%s' AND permalink = '%s')" % (uid, n['href']))
 
         substr = " OR ".join (subquery)
-        qstr = "SELECT uid, time, message, status_id FROM status " + \
+        qstr = "SELECT source_id, post_id, message, permalink FROM stream " + \
             "WHERE %s" % substr
         print "status query: " + qstr
         result = self._query (qstr)
         for r in result:
-            post_id = "%s_%s" % (r['uid'], r['status_id'])
-            new_status[post_id] = r
-
-            nids = [n['notification_id'] for n in matched_ns if n['status_post_id'] == post_id]
-            new_status[post_id]['notification_ids'] = nids
-
-        postids_str = ", ".join (post_ids)
-        qstr = "SELECT id, fromid, text, time, post_id FROM comment WHERE post_id IN (%s)" % postids_str
-        print "\ncomment: " + qstr
-        comments = self._query (qstr)
-
-        for c in comments:
-            post_id = c['post_id']
-            if new_status.has_key (post_id):
-                if new_status[post_id].has_key ('comments'):
-                    new_status[post_id]['comments'].append (c)
-                else:
-                    new_status[post_id]['comments'] = [c]
+            new_status[r['post_id']] = r
+            nids = [n['notification_id'] for n in matched_ns if n['href'] == r['permalink']]
+            new_status[r['post_id']]['notification_ids'] = nids
+        
+        post_ids = ["'%s'" % r['post_id'] for r in result]
+        substr = ", ".join (post_ids)
+        qstr = "SELECT fromid, text, post_id, id, time FROM comment WHERE post_id IN (%s)" % substr
+        comment_result = self._query (qstr)
+        for r in result:
+            comment_list = [c for c in comment_result if c['post_id'] == r['post_id']]
+            new_status[r['post_id']]['comments'] = comment_list
 
         self.status = new_status
         self._dump_status ()

@@ -51,7 +51,7 @@ class Comment:
         label_status.set_text (self.status['message'])
         label_status.set_size_request (STATUS_WIDTH, -1)
 
-        user = self.office.get_user (self.status['uid'])
+        user = self.office.get_user (self.status['source_id'])
         main_user_icon = self.builder.get_object ("main_pic")
         user_icons_dir = self.office.get_user_icons_dir ()
         main_user_icon.set_from_file \

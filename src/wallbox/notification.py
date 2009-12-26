@@ -111,9 +111,7 @@ class Notification (gobject.GObject):
             status = self.office.get_status_with_nid (nid)
             if status != {}:
                 print "status: %s" % status['message']
-                self.comment = \
-                    comment.Comment \
-                    ("%s_%s" % (status['uid'], status['status_id']))
+                self.comment = comment.Comment (status['post_id'])
                 self.comment.window.move (candidate_x, candidate_y)
         else:
             if self.comment != None:

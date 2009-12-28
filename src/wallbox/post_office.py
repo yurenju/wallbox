@@ -274,7 +274,7 @@ class RefreshProcess (threading.Thread):
 
     def get_remote_last_nid (self):
         qstr = "SELECT notification_id FROM notification " + \
-                "WHERE recipient_id = %d LIMIT 1" % self.uid
+                "WHERE recipient_id = %d LIMIT 1" % int (self.uid)
         result = self._query (qstr)
         if len (result) > 0:
             return result[0]['notification_id']

@@ -1,5 +1,4 @@
 wallbox v0.1
-Copyright (C) 2009, .
 
 WARNING: this project only has pre-alpha quality.
 design document:
@@ -37,11 +36,11 @@ fork and patch it.
  Run
 -----------------------------------------------------------------------------
 
-$ cd wallbox/wallbox
-$ python ./__init__.py
+$ cd src/wallbox
+$ python ./post_office.py
 
 If this is first time use wallbox, please Open another terminal
-$ cd wallbox/data
+$ cd src/wallbox
 $ ./wizard.py
 
 and complete wizard steps

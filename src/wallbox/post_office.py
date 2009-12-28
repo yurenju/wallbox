@@ -13,7 +13,7 @@ import urlparse
 import time
 import re
 import datetime
-import secert
+import secret
 import threading
 import gtk
 import pickle
@@ -320,7 +320,7 @@ class PostOffice (dbus.service.Object):
         self.pickle_load ()
 
         # wallbox auth
-        self.fb = facebook.Facebook (self.api_key, secert.key)
+        self.fb = facebook.Facebook (self.api_key, secret.key)
 
         try:
             dbus.service.Object.__init__ (self, bus_name, bus_path)

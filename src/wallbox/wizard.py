@@ -16,7 +16,6 @@ class Wizard:
         self.assistant = self.builder.get_object ("wizard_welcome")
         self.assistant.set_page_complete (self.assistant.get_nth_page (0), True)
         self.assistant.set_page_complete (self.assistant.get_nth_page (3), True)
-        self.assistant.connect ("apply", self.apply, None)
         self.assistant.show ()
 
         self.builder.connect_signals (self)
@@ -27,9 +26,6 @@ class Wizard:
 
         self.office = dbus.Interface \
             (obj, "org.wallbox.PostOfficeInterface")
-
-    def apply (self, widget, data=None):
-        self.assistant.destroy ()
 
     def show_continue_button (self, remove_widget, page_index, box_name):
         hbox = self.builder.get_object (box_name)
@@ -68,7 +64,6 @@ class Wizard:
 
     def on_wizard_welcome_apply (self, widget, data=None):
         self.office.refresh ()
-        self.assistant.destroy ()
 
 
 if __name__ == "__main__":

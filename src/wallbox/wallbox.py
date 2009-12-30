@@ -35,12 +35,14 @@ class wallbox:
 
         status = self.office.get_office_status ()
         if status == 3:
-            w = wizard.Wizard ()
-            w.assistant.connect ("destroy", self.wizard_finish)
+            self.wizard = wizard.Wizard ()
+            self.wizard.assistant.connect ("apply", self.wizard_finish, None)
         else:
             self.post_init ()
 
     def wizard_finish (self, widget, data=None):
+        print self.wizard.assistant
+        self.wizard.assistant.hide ()
         self.post_init ()
 
     def post_init (self):

@@ -123,7 +123,7 @@ class RefreshProcess (threading.Thread):
         self.notification = notification
 
     def get_remote_comments (self):
-        print "get remote comments"
+        print "get remote comments (fast)"
         pattern_id = re.compile ("&id=(\d+)")
         new_status = {}
 
@@ -144,6 +144,28 @@ class RefreshProcess (threading.Thread):
             "WHERE %s" % substr
         print "status query: " + qstr
         result = self._query (qstr)
+
+        if len (result) < len (subquery):
+            total_result = []
+            print "fast get stream failed, try slow get stream"
+            for n in matched_ns:
+                m_id = pattern_id.search (n['href'])
+
+                if m_id != None:
+                    uid = m_id.group (1)
+                    print "try href: %s" % n['href']
+                    for i in range (1, 4):
+                        qstr = "SELECT source_id, post_id, message, permalink " + \
+                                "FROM stream WHERE source_id = %s AND permalink = '%s' LIMIT %d" % (uid, n['href'], 10**i)
+                        print qstr
+                        result = self._query (qstr)
+                        print result
+                        if len (result) > 0:
+                            total_result.append (result[0])
+                            break
+                            
+            result = total_result
+
         for r in result:
             new_status[r['post_id']] = r
             nids = [n['notification_id'] for n in matched_ns if n['href'] == r['permalink']]

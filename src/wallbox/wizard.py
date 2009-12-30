@@ -66,7 +66,9 @@ class Wizard:
         self.assistant.set_current_page (int(data)+1)
         widget.disconnect (self.continue_id)
 
-    
+    def on_wizard_welcome_apply (self, widget, data=None):
+        self.office.refresh ()
+        self.assistant.destroy ()
 
 
 if __name__ == "__main__":

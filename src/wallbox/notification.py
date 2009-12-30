@@ -44,7 +44,6 @@ class Notification (gobject.GObject):
         self.on_office_status_changed (1)
         self.refresh_reply_cb ()
 
-
         self.office.connect_to_signal \
             ("status_changed", self.on_office_status_changed, \
             dbus_interface="org.wallbox.PostOfficeInterface")

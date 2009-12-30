@@ -5,6 +5,10 @@
   <object class="GtkAssistant" id="wizard_welcome">
     <property name="border_width">12</property>
     <property name="title" translatable="yes">First run wizard</property>
+    <signal name="apply" handler="on_wizard_welcome_apply"/>
+    <child>
+      <placeholder/>
+    </child>
     <child>
       <placeholder/>
     </child>

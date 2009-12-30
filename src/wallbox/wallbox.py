@@ -6,6 +6,7 @@ import gtk
 import dbus
 import dbus.mainloop.glib
 import notification
+import wizard
 import comment
 import os
 import os.path
@@ -32,6 +33,17 @@ class wallbox:
         self.office = dbus.Interface \
             (obj, "org.wallbox.PostOfficeInterface")
 
+        status = self.office.get_office_status ()
+        if status == 3:
+            w = wizard.Wizard ()
+            w.assistant.connect ("destroy", self.wizard_finish)
+        else:
+            self.post_init ()
+
+    def wizard_finish (self, widget, data=None):
+        self.post_init ()
+
+    def post_init (self):
         config_dir = os.path.expanduser ("~/.config")
         if not os.path.exists (config_dir):
             os.mkdir (config_dir)

@@ -54,8 +54,14 @@ class Comment:
         user = self.office.get_user (self.status['source_id'])
         main_user_icon = self.builder.get_object ("main_pic")
         user_icons_dir = self.office.get_user_icons_dir ()
-        main_user_icon.set_from_file \
-            ("%s/%s" % (user_icons_dir, user['pic_square_local']))
+
+        if not user.has_key ("pic_square_local"):
+            img_file = pkg_resources.resource_filename \
+                        (__name__, "data/images/q_silhouette.gif")
+        else:
+            img_file = "%s/%s" % (user_icons_dir, user['pic_square_local'])
+
+        main_user_icon.set_from_file (img_file)
 
         current_pic = self.builder.get_object ("current_user_pic")
         current_user = self.office.get_current_user ()

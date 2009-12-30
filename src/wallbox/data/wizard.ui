@@ -18,6 +18,12 @@
       <placeholder/>
     </child>
     <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
       <object class="GtkLabel" id="label_welcome">
         <property name="visible">True</property>
         <property name="label" translatable="yes">welcome to &lt;b&gt;wallbox&lt;/b&gt; facebook notification. you need active application and get extra permession for &lt;b&gt;wallbox&lt;/b&gt;.
@@ -68,6 +74,36 @@ please press Forward to active application.
             <property name="expand">False</property>
             <property name="fill">False</property>
             <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkHBox" id="hbox_session_code">
+            <property name="visible">True</property>
+            <child>
+              <object class="GtkEntry" id="entry_session_code">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="invisible_char">&#x25CF;</property>
+              </object>
+              <packing>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="button_session_code">
+                <property name="label" translatable="yes">button</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal name="clicked" handler="on_button_session_code_clicked"/>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="position">2</property>
           </packing>
         </child>
       </object>

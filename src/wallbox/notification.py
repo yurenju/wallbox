@@ -38,18 +38,6 @@ class Notification (gobject.GObject):
         self.office = dbus.Interface \
             (obj, "org.wallbox.PostOfficeInterface")
 
-        session = self.office.get_session ()
-        if session == {}:
-            self.office.login ()
-            for i in range (3):
-                try:
-                    self.office.login_completed ()
-                    break
-                except:
-                    print "login failed, waiting 5 sec"
-                    time.sleep (5)
-                    continue
-
         self.init_view ()
 
         self.office.refresh ()

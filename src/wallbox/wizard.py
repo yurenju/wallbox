@@ -46,8 +46,15 @@ class Wizard:
         self.show_continue_button (widget, 2, "hbox_extra_perm")
 
     def on_button_active_clicked (self, widget, data=None):
+        api_key = self.office.get_api_key ()
+        import webbrowser
+        webbrowser.open ("http://www.facebook.com/code_gen.php?v=1.0&api_key=%s" % api_key)
+
+    def on_button_session_code_clicked (self, widget, data=None):
+        entry = self.builder.get_object ("entry_session_code")
+        self.office.set_session_code (entry.get_text().strip())
         self.office.login ()
-        self.show_continue_button (widget, 1, "hbox_active")
+        self.assistant.set_current_page (2)
 
     def on_button_continue_clicked (self, widget, data=None):
         self.assistant.set_page_complete \

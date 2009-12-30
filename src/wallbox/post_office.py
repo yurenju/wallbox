@@ -13,7 +13,6 @@ import urlparse
 import time
 import re
 import datetime
-import secret
 import threading
 import gtk
 import pickle
@@ -136,7 +135,9 @@ class RefreshProcess (threading.Thread):
 
             if m_id != None:
                 uid = m_id.group (1)
-                subquery.append ("(source_id = '%s' AND permalink = '%s')" % (uid, n['href']))
+                _str = "(source_id = %s AND permalink = '%s')" % (uid, n['href'])
+                if _str not in subquery:
+                    subquery.append (_str)
 
         substr = " OR ".join (subquery)
         qstr = "SELECT source_id, post_id, message, permalink FROM stream " + \
@@ -313,14 +314,17 @@ class PostOffice (dbus.service.Object):
         self.refresh_interval = 60
         self.notification = []
         self.session = None
+        self.session_code = None
         self.api_key = '9103981b8f62c7dbede9757113372240'
+        self.secret = '4cd1dffd6bf0d466bf9ffcf2dcf7805c'
         self.office_status = NO_LOGIN
         self.last_nid = 0
         self.prepare_directories ()
+        self.cache_attributes = \
+            ["current_status", "notification", "status", \
+            "user_ids", "users", "app_ids", "applications"]
         self.pickle_load ()
 
-        # wallbox auth
-        self.fb = facebook.Facebook (self.api_key, secret.key)
 
         try:
             dbus.service.Object.__init__ (self, bus_name, bus_path)
@@ -328,7 +332,24 @@ class PostOffice (dbus.service.Object):
             print "DBus interface registration failed - other wallbox running somewhere"
             pass
 
-    
+        if self.restore_auth_status ():
+            self.status_changed (IS_LOGIN)
+        else:
+            self.status_changed (NO_LOGIN)
+
+
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='')
+    def set_session_code (self, session_code):
+        self.session_code = session_code.strip ()
+
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='s')
+    def get_secret (self):
+        return self.secret
+
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='s')
+    def get_api_key (self):
+        return self.api_key
+
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='')
     def notification_mark_all_read (self):
         ids = []
@@ -349,9 +370,15 @@ class PostOffice (dbus.service.Object):
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='')
     def login (self):
-        self.fb.auth.createToken ()
-        self.fb.login ()
-        self.status_changed (WAITING_LOGIN)
+        self.fb = facebook.Facebook (self.api_key, self.secret, self.session_code)
+        self.session = self.fb.auth.getSession ()
+        self.uid = self.fb.users.getInfo ([self.fb.uid])[0]['uid']
+        self.save_auth_status ()
+        if self.uid not in self.user_ids:
+            self.user_ids.append (self.uid)
+        self.status_changed (IS_LOGIN)
+
+        gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='')
     def get_ext_perm (self):
@@ -423,26 +450,63 @@ class PostOffice (dbus.service.Object):
                 return c
         return {}
 
+    def save_auth_status (self):
+        path = self.local_data_dir + "/auth.pickle"
+        auth = {}
+        auth["session_key"] = self.session['session_key']
+        auth["secret"] = self.session['secret']
+        output = open (path, 'wb')
+        pickle.dump (auth, output)
+        output.close ()
+
+    def restore_auth_status (self):
+        path = self.local_data_dir + "/auth.pickle"
+        if os.path.exists (path):
+            f = open (path, 'r')
+            try:
+                auth = pickle.load (f)
+            except:
+                f.close ()
+                print "pickle load failed"
+                return False
+
+            f.close ()
+            self.fb = facebook.Facebook (self.api_key, self.secret)
+            self.fb.session_key = auth["session_key"]
+            self.fb.uid = auth["session_key"].split('-')[1]
+            self.uid = self.fb.uid
+            if self.uid not in self.user_ids:
+                self.user_ids.append (self.uid)
+            self.fb.secret = auth["secret"]
+            return True
+        else:
+            "pickle auth not exist"
+            return False
+
     def pickle_load (self):
-        attributes = ["current_status", "notification", "status", "user_ids", "users", "app_ids", "applications"]
-        for attr_str in attributes:
-            path = self.local_data_dir + "/%s.pickle" % attr_str
-            if os.path.exists (path):
-                file = open (path, 'r')
-                try:
-                    attr = pickle.load (file)
-                    attr = setattr (self, attr_str, attr)
-                except:
-                    pass
-                file.close ()
+        cache = None
+        path = self.local_data_dir + "/cache.pickle"
+        if os.path.exists (path):
+            f = open (path, 'r')
+            try:
+                cache = pickle.load (f)
+            except:
+                print "load cache pickle failed"
+                return
+            f.close ()
+            for skey in cache:
+                setattr (self, skey, cache[skey])
+        else:
+            print "cache.pickle not found"
 
     def pickle_dump (self):
-        attributes = ["current_status", "notification", "status", "user_ids", "users", "app_ids", "applications"]
-        for attr_str in attributes:
-            output = open (self.local_data_dir + "/%s.pickle" % attr_str, 'wb')
+        cache = {}
+        for attr_str in self.cache_attributes:
             attr = getattr (self, attr_str)
-            pickle.dump (attr, output)
-            output.close ()
+            cache[attr_str] = attr
+        output = open (self.local_data_dir + "/cache.pickle", 'wb')
+        pickle.dump (cache, output)
+        output.close ()
 
     def check_refresh_complete (self):
         if self.rs.isAlive ():
@@ -491,7 +555,6 @@ class PostOffice (dbus.service.Object):
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='a{sv}')
     def get_current_status (self):
-        print "get current status"
         print "%s\n" % self.current_status['message']
         if len (self.current_status) < 1:
             return {}
@@ -532,8 +595,10 @@ class PostOffice (dbus.service.Object):
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='a{sv}')
     def get_current_user (self):
+        print "get current user: %s" % int (self.uid)
         for u in self.users:
-            if u['uid'] == self.uid:
+            print "search %s" % u['uid']
+            if int (u['uid']) == int (self.uid):
                 return u
         print "no current user"
         return {}

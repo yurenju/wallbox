@@ -39,7 +39,6 @@
             <child>
               <object class="GtkLabel" id="label_current_status">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">user current status</property>
                 <property name="wrap">True</property>
               </object>
               <packing>

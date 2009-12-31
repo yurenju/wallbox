@@ -7,6 +7,7 @@ import dbus
 import dbus.mainloop.glib
 import sys
 import pkg_resources
+import pango
 
 COMMENT_ICON_SIZE = 30
 MAIN_ICON_SIZE = 50
@@ -107,7 +108,7 @@ class Comment:
 
         self.icon_cell.set_property ("yalign", 0.1)
         self.text_cell.set_property ("wrap-width", TEXT_CELL_WIDTH)
-        self.text_cell.set_property ("wrap-mode", gtk.WRAP_WORD)
+        self.text_cell.set_property ("wrap-mode", pango.WRAP_WORD)
         self.text_cell.set_property ("yalign", 0.1)
 
         self.column.pack_start (self.icon_cell, False)

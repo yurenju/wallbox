@@ -10,6 +10,7 @@ import sys
 import time
 import gobject
 import pkg_resources
+import pango
 
 class Notification (gobject.GObject):
 
@@ -124,7 +125,7 @@ class Notification (gobject.GObject):
         self.icon_cell.set_property ("yalign", 0.1)
         self.text_cell.set_property ("wrap-width", 150)
         self.text_cell.set_property ("yalign", 0.1)
-        self.text_cell.set_property ("wrap-mode", gtk.WRAP_WORD)
+        self.text_cell.set_property ("wrap-mode", pango.WRAP_WORD)
 
         self.column.pack_start (self.icon_cell, False)
         self.column.pack_start (self.text_cell, True)

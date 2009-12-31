@@ -158,11 +158,19 @@ class Notification (gobject.GObject):
     def refresh_reply_cb (self, data=None):
         label = self.builder.get_object ("label_current_status")
         status = self.office.get_current_status ()
-        label.set_text (status['message'])
+        if len (status) != 0:
+            label.set_text (status['message'])
         user = self.office.get_current_user ()
         pic_square = self.builder.get_object ("image_pic_square")
         user_icon_path = self.office.get_user_icons_dir ()
-        pic_square.set_from_file (user_icon_path + '/' + user['pic_square_local'])
+
+        if len (user) != 0:
+            pic_square.set_from_file (user_icon_path + '/' + user['pic_square_local'])
+        else:
+            img_file = pkg_resources.resource_filename \
+                        (__name__, "data/images/q_silhouette.gif")
+            pic_square.set_from_file (img_file)
+            
 
         nlist = self.office.get_notification_list ()
         liststore = self.builder.get_object ("list_notification")

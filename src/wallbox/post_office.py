@@ -577,9 +577,9 @@ class PostOffice (dbus.service.Object):
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='a{sv}')
     def get_current_status (self):
-        print "%s\n" % self.current_status['message']
-        if len (self.current_status) < 1:
+        if self.current_status == None or len (self.current_status) < 1:
             return {}
+        print "%s\n" % self.current_status['message']
         return self.current_status
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='a{sv}')

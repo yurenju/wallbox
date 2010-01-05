@@ -37,14 +37,6 @@ fork and patch it.
 -----------------------------------------------------------------------------
 
 $ cd src/wallbox
-$ python ./post_office.py
-
-If this is first time use wallbox, please Open another terminal
-$ cd src/wallbox
-$ ./wizard.py
-
-and complete wizard steps
-
 $ ./wallbox.py
 
 

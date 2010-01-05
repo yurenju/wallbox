@@ -93,6 +93,8 @@ class Notification (gobject.GObject):
         if it == None:
             return
         nid = list.get (it, 3)[0]
+        entry = self.office.get_notification_entry (nid)
+        logging.info ("herf: " + entry['href'])
         has_detail = list.get (it, 2)[0]
         logging.debug ("nid: %s" % nid)
         logging.debug ("has_detail: %s" % has_detail)

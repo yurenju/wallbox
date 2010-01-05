@@ -8,6 +8,8 @@ import dbus.mainloop.glib
 import sys
 import pkg_resources
 import pango
+import defs
+import logging
 
 COMMENT_ICON_SIZE = 30
 MAIN_ICON_SIZE = 50
@@ -17,6 +19,7 @@ STATUS_WIDTH = \
 
 class Comment:
     def __init__ (self, post_id):
+        logging.basicConfig (level=defs.log_level)
         self.post_id = post_id
         self.builder = gtk.Builder ()
 
@@ -72,7 +75,7 @@ class Comment:
         try:
             pixbuf = gtk.image_new_from_file (icon_path).get_pixbuf ()
         except:
-            print "no icon: comment.py:59 [%s]" % icon_path
+            logging.debug ("no icon: comment.py:59 [%s]" % icon_path)
             img_file = pkg_resources.resource_filename \
                         (__name__, "data/images/q_silhouette.gif")
             icon = gtk.image_new_from_file (img_file)
@@ -133,7 +136,7 @@ class Comment:
         try:
             pixbuf = icon.get_pixbuf ()
         except:
-            print "no icon: comment.py:116 [%s]" % icon_path
+            logging.debug ("no icon: comment.py:116 [%s]" % icon_path)
             img_file = pkg_resources.resource_filename \
                         (__name__, "data/images/q_silhouette.gif")
             icon = gtk.image_new_from_file (img_file)

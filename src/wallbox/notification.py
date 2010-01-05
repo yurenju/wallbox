@@ -11,10 +11,13 @@ import time
 import gobject
 import pkg_resources
 import pango
+import defs
+import logging
 
 class Notification (gobject.GObject):
 
     def __init__ (self, offline=False):
+        logging.basicConfig (level=defs.log_level)
         gobject.GObject.__init__(self)
         self.comment = None
         self.builder = gtk.Builder ()
@@ -50,11 +53,11 @@ class Notification (gobject.GObject):
             dbus_interface="org.wallbox.PostOfficeInterface")
 
     def on_link_refresh_clicked (self, link, data=None):
-        print "on_link_refresh_clicked"
+        logging.debug ("on_link_refresh_clicked")
         self.office.refresh ()
 
     def on_button_share_clicked (self, button, data=None):
-        print "on_button_share_clicked"
+        logging.debug ("on_button_share_clicked")
         entry_status = self.builder.get_object ("entry_status")
         if entry_status != None and len (entry_status.get_text ()) > 0:
             self.office.post_status (entry_status.get_text ())
@@ -91,14 +94,14 @@ class Notification (gobject.GObject):
             return
         nid = list.get (it, 3)[0]
         has_detail = list.get (it, 2)[0]
-        print "nid: %s" % nid
-        print "has_detail: %s" % has_detail
+        logging.debug ("nid: %s" % nid)
+        logging.debug ("has_detail: %s" % has_detail)
         if has_detail:
             if self.comment != None:
                 self.comment.window.destroy ()
             status = self.office.get_status_with_nid (nid)
             if status != {}:
-                print "status: %s" % status['message']
+                logging.debug ("status: %s" % status['message'])
                 self.comment = comment.Comment (status['post_id'])
                 self.comment.window.move (candidate_x, candidate_y)
         else:
@@ -200,7 +203,7 @@ class Notification (gobject.GObject):
             self.emit ("has-unread")
 
     def refresh_error_cb (self, e):
-        print e
+        logging.debug (e)
         pass
 
 if __name__ == "__main__":

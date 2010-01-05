@@ -17,6 +17,8 @@ import threading
 import gtk
 import pickle
 import socket
+import defs
+import logging
 
 __author__ = 'Yuren Ju <yurenju@gmail.com>'
 
@@ -28,6 +30,7 @@ NO_LOGIN = 3
 GET_ICON_TIMEOUT = 3
 
 gtk.gdk.threads_init()
+logging.basicConfig (level=defs.log_level)
 
 def touch(fname, times = None):
     fhandle = file(fname, 'a')
@@ -68,26 +71,27 @@ class RefreshProcess (threading.Thread):
         self.last_nid = last_nid
     
     def _dump_comments (self, post_id):
-        print "status: %s: %s" % (post_id, self.status[post_id]['message'])
-        print "comments:"
+        logging.debug ("status: %s: %s" % (post_id, self.status[post_id]['message']))
+        logging.debug ("comments:")
         for c in self.status[post_id]['comments']:
-            print "\t%s" % c['text']
+            logging.debug ("\t%s" % c['text'])
 
     def _dump_status (self):
-        print "=== START === dump status"
+        logging.debug ("=== START === dump status")
         for skey in self.status:
             if self.status[skey].has_key ('message'):
-                print "status: %s" % self.status[skey]['message']
+                logging.debug ("status: %s" % self.status[skey]['message'])
             else:
-                print "ERROR status key: %s has no message" % skey
-                print "detail:\n%s" % self.status[skey]
+                logging.debug ("ERROR status key: %s has no message" % skey)
+                logging.debug ("detail:\n%s" % self.status[skey])
             if not self.status[skey].has_key ('notification_ids'):
-                print "NO notification_ids"
+                logging.debug ("NO notification_ids")
                 continue
-            print "nids: ",
+            nids_log = "nids: "
             for n in self.status[skey]['notification_ids']:
-                print "%s, " % n,
-        print "\n=== END === dump status"
+                nids_log += "%s, " % n
+            logging.debug (nids_log)
+        logging.debug ("\n=== END === dump status")
 
     def _query (self, query_str):
         for i in range (3):
@@ -96,12 +100,12 @@ class RefreshProcess (threading.Thread):
                 if result != None:
                     return result
             except:
-                print "URLError, Sleep 3 sec"
+                logging.debug ("URLError, Sleep 3 sec")
                 time.sleep (3)
         return None
             
     def get_remote_current_status (self):
-        print "get remote current status"
+        logging.debug ("get remote current status")
         qstr = "SELECT uid, status_id, message, " + \
                 "source FROM status WHERE uid='%s' LIMIT 1" % self.uid
         status = self._query (qstr)
@@ -109,7 +113,7 @@ class RefreshProcess (threading.Thread):
         self.current_status = status[0]
 
     def get_remote_notification (self):
-        print "get remote notification"
+        logging.debug ("get remote notification")
         notification = self._query \
             ("SELECT notification_id, title_text, body_text, is_unread" + \
             ", is_hidden, href, app_id, sender_id " + \
@@ -123,7 +127,7 @@ class RefreshProcess (threading.Thread):
         self.notification = notification
 
     def get_remote_comments (self):
-        print "get remote comments (fast)"
+        logging.debug ("get remote comments (fast)")
         pattern_id = re.compile ("&id=(\d+)")
         new_status = {}
 
@@ -142,24 +146,24 @@ class RefreshProcess (threading.Thread):
         substr = " OR ".join (subquery)
         qstr = "SELECT source_id, post_id, message, permalink FROM stream " + \
             "WHERE %s" % substr
-        print "status query: " + qstr
+        logging.debug ("status query: " + qstr)
         result = self._query (qstr)
 
         if len (result) < len (subquery):
             total_result = []
-            print "fast get stream failed, try slow get stream"
+            logging.debug ("fast get stream failed, try slow get stream")
             for n in matched_ns:
                 m_id = pattern_id.search (n['href'])
 
                 if m_id != None:
                     uid = m_id.group (1)
-                    print "try href: %s" % n['href']
+                    logging.debug ("try href: %s" % n['href'])
                     for i in range (1, 4):
                         qstr = "SELECT source_id, post_id, message, permalink " + \
                                 "FROM stream WHERE source_id = %s AND permalink = '%s' LIMIT %d" % (uid, n['href'], 10**i)
-                        print qstr
+                        logging.debug (qstr)
                         result = self._query (qstr)
-                        print result
+                        logging.debug (result)
                         if len (result) > 0:
                             total_result.append (result[0])
                             break
@@ -199,7 +203,7 @@ class RefreshProcess (threading.Thread):
             local_size = os.path.getsize (full_path)
 
         try:
-            print "urlopen: %s" % url
+            logging.debug ("urlopen: %s" % url)
             remote_icon = urllib2.urlopen (url)
         except:
             raise TimeoutError ("urlopen timeout")
@@ -210,19 +214,19 @@ class RefreshProcess (threading.Thread):
 
 
         if remote_size != local_size or not os.path.exists (full_path):
-            print "size different remote/local: %d/%d, start dwonload icon" % (remote_size, local_size)
+            logging.debug ("size different remote/local: %d/%d, start dwonload icon" % (remote_size, local_size))
             try:
                 urllib.urlretrieve (url, full_path)
                 return icon_name
             except:
                 raise TimeoutError ("urlretrieve timeout")
         else:
-            print "icon already exist: %s" % icon_name
+            logging.debug ("icon already exist: %s" % icon_name)
             touch (full_path)
             return icon_name
 
     def get_remote_users_icon (self):
-        print "get remote users icon"
+        logging.debug ("get remote users icon")
         for n in self.notification:
             if not n['sender_id'] in self.user_ids:
                 self.user_ids.append (n['sender_id'])
@@ -237,7 +241,7 @@ class RefreshProcess (threading.Thread):
 
         default_timeout = socket.getdefaulttimeout ()
         socket.setdefaulttimeout (GET_ICON_TIMEOUT)
-        print "socket timeout: %s" % socket.getdefaulttimeout ()
+        logging.debug ("socket timeout: %s" % socket.getdefaulttimeout ())
         timeout_count = 0
         for u in self.users:
             if (u['pic_square'] != None and len (u['pic_square']) > 0):
@@ -247,16 +251,16 @@ class RefreshProcess (threading.Thread):
                             self.get_remote_icon (u['pic_square'], self.user_icons_dir)
                     except TimeoutError:
                         timeout_count += 1
-                        print "timeout"
+                        logging.debug ("timeout")
                         u['pic_square_local'] = ""
                     except NoUpdateError:
                         icon_name = os.path.basename \
                             (urlparse.urlsplit (u['pic_square']).path)
-                        print "No need update: %s" % icon_name
+                        logging.debug ("No need update: %s" % icon_name)
                         u['pic_square_local'] = icon_name
                         
                 else:
-                    print "timeout 3 times"
+                    logging.debug ("timeout 3 times")
                     u['pic_square_local'] = ""
             else:
                 u['pic_square_local'] = ""
@@ -264,30 +268,30 @@ class RefreshProcess (threading.Thread):
         socket.setdefaulttimeout (default_timeout)
 
     def get_remote_applications_icon (self):
-        print "get remote applications icon"
+        logging.debug ("get remote applications icon")
         for n in self.notification:
             if not str (n['app_id']) in self.app_ids:
                 self.app_ids.append (str (n['app_id']))
 
         ids_str = ", ".join (self.app_ids)
         qstr = "SELECT icon_url, app_id FROM application WHERE app_id IN (%s)" % ids_str
-        print "qstr: %s" % qstr
+        logging.debug ("qstr: %s" % qstr)
         apps = self.fb.fql.query (qstr)
 
         default_timeout = socket.getdefaulttimeout ()
         socket.setdefaulttimeout (GET_ICON_TIMEOUT)
-        print "socket timeout: %s" % socket.getdefaulttimeout ()
+        logging.debug ("socket timeout: %s" % socket.getdefaulttimeout ())
         timeout_count = 0
         for app in apps:
             if timeout_count < 3:
                 try:
                     icon_name = self.get_remote_icon (app['icon_url'], self.app_icons_dir)
                 except TimeoutError:
-                    print "timeout"
+                    logging.debug ("timeout")
                     timeout_count += 1
                     icon_name = ""
                 except NoUpdateError:
-                    print "No need update"
+                    logging.debug ("No need update")
                     icon_name = os.path.basename \
                             (urlparse.urlsplit (app['icon_url']).path)
             else:
@@ -307,7 +311,7 @@ class RefreshProcess (threading.Thread):
     def run (self):
         last_nid = self.get_remote_last_nid ()
         if last_nid == self.last_nid:
-            print "no need to update notification"
+            logging.debug ("no need to update notification")
             return
         self.get_remote_current_status ()
         time.sleep (1)
@@ -320,7 +324,7 @@ class RefreshProcess (threading.Thread):
         self.get_remote_applications_icon ()
         time.sleep (1)
         self.updated_timestamp = datetime.date.today ()
-        print "updated finish"
+        logging.debug ("updated finish")
 
 
 class PostOffice (dbus.service.Object):
@@ -351,7 +355,7 @@ class PostOffice (dbus.service.Object):
         try:
             dbus.service.Object.__init__ (self, bus_name, bus_path)
         except KeyError:
-            print "DBus interface registration failed - other wallbox running somewhere"
+            logging.debug ("DBus interface registration failed - other wallbox running somewhere")
             pass
 
         if self.restore_auth_status ():
@@ -384,7 +388,7 @@ class PostOffice (dbus.service.Object):
             self.fb ("notifications_markRead", \
                 {"session_key": self.session['session_key'], "notification_ids": ids})
         except:
-            print "notification_mark_all_read failed"
+            logging.debug ("notification_mark_all_read failed")
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='i')
     def get_office_status (self):
@@ -457,10 +461,10 @@ class PostOffice (dbus.service.Object):
     def get_comments_list (self, post_id):
         clist = []
         for s in self.status:
-            print "post_id: %s" % s
+            logging.debug ("post_id: %s" % s)
         for c in self.status[post_id]['comments']:
             clist.append (c['id'])
-            print "\t%s" % c['id']
+            logging.debug ("\t%s" % c['id'])
         print
         return clist
 
@@ -489,7 +493,7 @@ class PostOffice (dbus.service.Object):
                 auth = pickle.load (f)
             except:
                 f.close ()
-                print "pickle load failed"
+                logging.debug ("pickle load failed")
                 return False
 
             f.close ()
@@ -513,13 +517,13 @@ class PostOffice (dbus.service.Object):
             try:
                 cache = pickle.load (f)
             except:
-                print "load cache pickle failed"
+                logging.debug ("load cache pickle failed")
                 return
             f.close ()
             for skey in cache:
                 setattr (self, skey, cache[skey])
         else:
-            print "cache.pickle not found"
+            logging.debug ("cache.pickle not found")
 
     def pickle_dump (self):
         cache = {}
@@ -554,12 +558,12 @@ class PostOffice (dbus.service.Object):
 
     def _refresh (self):
         if self.office_status != IS_LOGIN:
-            print "not IS_LOGIN"
+            logging.debug ("not IS_LOGIN")
             return True
 
         self.orig_office_status = self.office_status
         self.status_changed (REFRESHING)
-        print "notification_num: %s" % self.notification_num
+        logging.debug ("notification_num: %s" % self.notification_num)
         self.rs = RefreshProcess \
             (self.notification_num, self.fb, self.uid, self.user_icons_dir, self.app_icons_dir, self.user_ids, self.last_nid)
         self.rs.start ()
@@ -579,13 +583,13 @@ class PostOffice (dbus.service.Object):
     def get_current_status (self):
         if self.current_status == None or len (self.current_status) < 1:
             return {}
-        print "%s\n" % self.current_status['message']
+        logging.debug ("%s\n" % self.current_status['message'])
         return self.current_status
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='a{sv}')
     def get_status (self, post_id):
         result = self.status[post_id].copy ()
-        print result
+        logging.debug (result)
         if result.has_key ('comments'):
             del result['comments']
         if len (result) < 1:
@@ -594,20 +598,20 @@ class PostOffice (dbus.service.Object):
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='i', out_signature='a{sv}')
     def get_status_with_nid (self, nid):
-        print "get_status_with_nid: %s" % nid
+        logging.debug ("get_status_with_nid: %s" % nid)
         result = None
-        print "status len: %s" % len(self.status)
+        logging.debug ("status len: %s" % len(self.status))
         for key in self.status:
-            print "looking id: %s\n" % self.status[key]['notification_ids']
+            logging.debug ("looking id: %s\n" % self.status[key]['notification_ids'])
 
             if self.status[key].has_key ('notification_ids') and \
                 str (nid) in self.status[key]['notification_ids']:
                 result = self.status[key].copy ()
                 if result.has_key ('comments'):
                     del result ['comments']
-                print "status: %s\n" % self.status[key]['message']
+                logging.debug ("status: %s\n" % self.status[key]['message'])
                 return result
-        print "get_status_with_nid: no result"
+        logging.debug ("get_status_with_nid: no result")
         return {}
     
 
@@ -617,12 +621,12 @@ class PostOffice (dbus.service.Object):
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='a{sv}')
     def get_current_user (self):
-        print "get current user: %s" % int (self.uid)
+        logging.debug ("get current user: %s" % int (self.uid))
         for u in self.users:
-            print "search %s" % u['uid']
+            logging.debug ("search %s" % u['uid'])
             if int (u['uid']) == int (self.uid):
                 return u
-        print "no current user"
+        logging.debug ("no current user")
         return {}
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='x', out_signature='a{sv}')
@@ -643,7 +647,7 @@ class PostOffice (dbus.service.Object):
     @dbus.service.signal ("org.wallbox.PostOfficeInterface", signature='i')
     def status_changed (self, status):
         self.office_status = status
-        print "emit signal: %s" % status
+        logging.debug ("emit signal: %s" % status)
 
     def prepare_directories (self):
         self.local_data_dir = \

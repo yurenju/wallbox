@@ -14,6 +14,10 @@ import ConfigParser
 from subprocess import Popen, PIPE
 import pkg_resources
 import time
+import defs
+import logging
+
+logging.basicConfig (level=defs.log_level)
 
 def read_all_reply_handler (reply=None):
     pass
@@ -41,7 +45,7 @@ class wallbox:
             self.post_init ()
 
     def wizard_finish (self, widget, data=None):
-        print self.wizard.assistant
+        logging.debug (self.wizard.assistant)
         self.wizard.assistant.hide ()
         self.post_init ()
 
@@ -102,7 +106,7 @@ def run_post_office ():
         obj = bus.get_object ("org.wallbox.PostOfficeService", \
             "/org/wallbox/PostOfficeObject")
     except:
-        print "execute post_office.py"
+        logging.debug ("execute post_office.py")
         office = pkg_resources.resource_filename \
                     (__name__, "post_office.py")
         Popen ([office], shell=True)

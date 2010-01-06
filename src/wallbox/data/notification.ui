@@ -16,6 +16,7 @@
   </object>
   <object class="GtkWindow" id="notification_window">
     <property name="border_width">10</property>
+    <property name="skip_taskbar_hint">True</property>
     <property name="decorated">False</property>
     <child>
       <object class="GtkVBox" id="vbox_main">

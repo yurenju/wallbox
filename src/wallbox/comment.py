@@ -10,6 +10,7 @@ import pkg_resources
 import pango
 import defs
 import logging
+import utils
 
 COMMENT_ICON_SIZE = 30
 MAIN_ICON_SIZE = 50
@@ -88,6 +89,8 @@ class Comment:
         self.user = user
 
         self.init_view ()
+
+        utils.set_scollbar_height (self.window, self.treeview, self.builder.get_object ("scrolledwindow"))
 
     def on_button_share_clicked (self, button, data=None):
         entry = self.builder.get_object ("entry_comment")

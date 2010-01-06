@@ -13,6 +13,7 @@ import pkg_resources
 import pango
 import defs
 import logging
+import utils
 
 class Notification (gobject.GObject):
 
@@ -30,6 +31,7 @@ class Notification (gobject.GObject):
         self.window = self.builder.get_object ("notification_window")
         self.window.connect ("configure-event", self.on_window_resize)
         self.entry_status = self.builder.get_object ("entry_status")
+        self.scrolledwindow = self.builder.get_object ("scrolledwindow")
 
         gobject.signal_new \
             ("has-unread", Notification, gobject.SIGNAL_RUN_LAST, \
@@ -203,6 +205,8 @@ class Notification (gobject.GObject):
 
         if has_unread == True:
             self.emit ("has-unread")
+
+        utils.set_scollbar_height (self.window, self.treeview, self.scrolledwindow)
 
     def refresh_error_cb (self, e):
         logging.debug (e)

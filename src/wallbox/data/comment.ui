@@ -53,12 +53,20 @@
               </packing>
             </child>
             <child>
-              <object class="GtkTreeView" id="treeview_comment">
+              <object class="GtkScrolledWindow" id="scrolledwindow">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="model">liststore_comment</property>
-                <property name="headers_visible">False</property>
-                <property name="search_column">0</property>
+                <property name="hscrollbar_policy">never</property>
+                <property name="vscrollbar_policy">automatic</property>
+                <child>
+                  <object class="GtkTreeView" id="treeview_comment">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="model">liststore_comment</property>
+                    <property name="headers_visible">False</property>
+                    <property name="search_column">0</property>
+                  </object>
+                </child>
               </object>
               <packing>
                 <property name="position">1</property>

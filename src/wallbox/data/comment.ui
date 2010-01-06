@@ -13,101 +13,109 @@
     </columns>
   </object>
   <object class="GtkWindow" id="comment_window">
-    <property name="border_width">10</property>
     <property name="skip_taskbar_hint">True</property>
     <property name="decorated">False</property>
     <child>
-      <object class="GtkVBox" id="vbox_main">
+      <object class="GtkAspectFrame" id="aspectframe1">
         <property name="visible">True</property>
-        <property name="orientation">vertical</property>
+        <property name="label_xalign">0</property>
+        <property name="shadow_type">in</property>
         <child>
-          <object class="GtkHBox" id="hbox_status">
+          <object class="GtkVBox" id="vbox_main">
             <property name="visible">True</property>
+            <property name="border_width">5</property>
+            <property name="orientation">vertical</property>
             <child>
-              <object class="GtkImage" id="main_pic">
+              <object class="GtkHBox" id="hbox_status">
                 <property name="visible">True</property>
-                <property name="stock">gtk-missing-image</property>
+                <child>
+                  <object class="GtkImage" id="main_pic">
+                    <property name="visible">True</property>
+                    <property name="stock">gtk-missing-image</property>
+                  </object>
+                  <packing>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="label_status">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">label</property>
+                    <property name="wrap">True</property>
+                  </object>
+                  <packing>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="position">0</property>
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="label_status">
+              <object class="GtkTreeView" id="treeview_comment">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">label</property>
-                <property name="wrap">True</property>
+                <property name="can_focus">True</property>
+                <property name="model">liststore_comment</property>
+                <property name="headers_visible">False</property>
+                <property name="search_column">0</property>
               </object>
               <packing>
                 <property name="position">1</property>
               </packing>
             </child>
-          </object>
-          <packing>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkTreeView" id="treeview_comment">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="model">liststore_comment</property>
-            <property name="headers_visible">False</property>
-          </object>
-          <packing>
-            <property name="position">1</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkHBox" id="hbox_post_comment">
-            <property name="visible">True</property>
             <child>
-              <object class="GtkImage" id="current_user_pic">
+              <object class="GtkHBox" id="hbox_post_comment">
                 <property name="visible">True</property>
-                <property name="stock">gtk-missing-image</property>
+                <child>
+                  <object class="GtkImage" id="current_user_pic">
+                    <property name="visible">True</property>
+                    <property name="stock">gtk-missing-image</property>
+                  </object>
+                  <packing>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry" id="entry_comment">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="invisible_char">&#x25CF;</property>
+                  </object>
+                  <packing>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
               </object>
               <packing>
-                <property name="position">0</property>
+                <property name="position">2</property>
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="entry_comment">
+              <object class="GtkHBox" id="hbox_share">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="invisible_char">&#x25CF;</property>
-              </object>
-              <packing>
-                <property name="position">1</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="position">2</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkHBox" id="hbox_share">
-            <property name="visible">True</property>
-            <child>
-              <object class="GtkButton" id="button_share">
-                <property name="label" translatable="yes">Share</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <signal name="clicked" handler="on_button_share_clicked"/>
+                <child>
+                  <object class="GtkButton" id="button_share">
+                    <property name="label" translatable="yes">Share</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <signal name="clicked" handler="on_button_share_clicked"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="pack_type">end</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="pack_type">end</property>
-                <property name="position">0</property>
+                <property name="position">3</property>
               </packing>
             </child>
           </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="position">3</property>
-          </packing>
         </child>
       </object>
     </child>

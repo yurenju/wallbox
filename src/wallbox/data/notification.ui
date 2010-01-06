@@ -15,123 +15,138 @@
     </columns>
   </object>
   <object class="GtkWindow" id="notification_window">
-    <property name="border_width">10</property>
     <property name="skip_taskbar_hint">True</property>
     <property name="decorated">False</property>
     <child>
-      <object class="GtkVBox" id="vbox_main">
+      <object class="GtkAspectFrame" id="aspectframe1">
         <property name="visible">True</property>
-        <property name="orientation">vertical</property>
-        <property name="spacing">5</property>
+        <property name="label_xalign">0</property>
+        <property name="shadow_type">out</property>
         <child>
-          <object class="GtkHBox" id="hbox_current_status">
+          <object class="GtkVBox" id="vbox_main">
             <property name="visible">True</property>
+            <property name="border_width">5</property>
+            <property name="orientation">vertical</property>
+            <property name="spacing">5</property>
             <child>
-              <object class="GtkImage" id="image_pic_square">
+              <object class="GtkHBox" id="hbox_current_status">
                 <property name="visible">True</property>
-                <property name="stock">gtk-missing-image</property>
+                <child>
+                  <object class="GtkImage" id="image_pic_square">
+                    <property name="visible">True</property>
+                    <property name="stock">gtk-missing-image</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="label_current_status">
+                    <property name="visible">True</property>
+                    <property name="wrap">True</property>
+                  </object>
+                  <packing>
+                    <property name="padding">3</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkHBox" id="hbox_input">
+                <property name="visible">True</property>
+                <child>
+                  <object class="GtkEntry" id="entry_status">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="invisible_char">&#x25CF;</property>
+                  </object>
+                  <packing>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="button_share">
+                    <property name="label" translatable="yes">Share</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <signal name="clicked" handler="on_button_share_clicked"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkScrolledWindow" id="scrolledwindow">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="hscrollbar_policy">never</property>
+                <property name="vscrollbar_policy">automatic</property>
+                <child>
+                  <object class="GtkTreeView" id="treeview_notification">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="model">list_notification</property>
+                    <property name="headers_visible">False</property>
+                    <property name="search_column">0</property>
+                    <property name="hover_selection">True</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="position">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkHBox" id="hbox_refresh">
+                <property name="visible">True</property>
+                <child>
+                  <object class="GtkLinkButton" id="link_refresh">
+                    <property name="label" translatable="yes">refresh</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="relief">none</property>
+                    <signal name="clicked" handler="on_link_refresh_clicked"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkImage" id="refresh_animation">
+                    <property name="visible">True</property>
+                    <property name="xalign">0.10000000149011612</property>
+                    <property name="stock">gtk-missing-image</property>
+                  </object>
+                  <packing>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="label_current_status">
-                <property name="visible">True</property>
-                <property name="wrap">True</property>
-              </object>
-              <packing>
-                <property name="padding">3</property>
-                <property name="position">1</property>
+                <property name="position">3</property>
               </packing>
             </child>
           </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkHBox" id="hbox_input">
-            <property name="visible">True</property>
-            <child>
-              <object class="GtkEntry" id="entry_status">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="invisible_char">&#x25CF;</property>
-              </object>
-              <packing>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="button_share">
-                <property name="label" translatable="yes">Share</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <signal name="clicked" handler="on_button_share_clicked"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="position">1</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkTreeView" id="treeview_notification">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="model">list_notification</property>
-            <property name="headers_visible">False</property>
-            <property name="hover_selection">True</property>
-          </object>
-          <packing>
-            <property name="position">2</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkHBox" id="hbox_refresh">
-            <property name="visible">True</property>
-            <child>
-              <object class="GtkLinkButton" id="link_refresh">
-                <property name="label" translatable="yes">refresh</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="has_tooltip">True</property>
-                <property name="relief">none</property>
-                <signal name="clicked" handler="on_link_refresh_clicked"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkImage" id="refresh_animation">
-                <property name="visible">True</property>
-                <property name="xalign">0.10000000149011612</property>
-                <property name="stock">gtk-missing-image</property>
-              </object>
-              <packing>
-                <property name="position">1</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
-            <property name="position">3</property>
-          </packing>
         </child>
       </object>
     </child>

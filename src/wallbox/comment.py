@@ -11,6 +11,7 @@ import pango
 import defs
 import logging
 import utils
+import gobject
 
 COMMENT_ICON_SIZE = 30
 MAIN_ICON_SIZE = 50
@@ -30,7 +31,6 @@ class Comment:
         self.builder.add_from_file (ui_file)
         self.builder.connect_signals (self, None)
         self.window = self.builder.get_object ("comment_window")
-        self.window.show ()
 
         self.entry_comment = self.builder.get_object ("entry_comment")
         self.entry_comment.grab_focus ()
@@ -91,6 +91,15 @@ class Comment:
         self.init_view ()
 
         utils.set_scollbar_height (self.window, self.treeview, self.builder.get_object ("scrolledwindow"))
+        gobject.timeout_add (300, self.delay_show_window)
+
+    def destroy (self):
+        self.window.destroy ()
+        return False
+
+    def delay_show_window (self):
+        self.window.show ()
+        return False
 
     def on_button_share_clicked (self, button, data=None):
         entry = self.builder.get_object ("entry_comment")

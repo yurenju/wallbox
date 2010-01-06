@@ -14,7 +14,6 @@
   </object>
   <object class="GtkWindow" id="comment_window">
     <property name="border_width">10</property>
-    <property name="type">popup</property>
     <property name="decorated">False</property>
     <child>
       <object class="GtkVBox" id="vbox_main">

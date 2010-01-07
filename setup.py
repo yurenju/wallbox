@@ -20,5 +20,9 @@ setup (
         'gui_scripts': [
             'wallbox = wallbox.wallbox:run_wallbox',
         ],
+        'console_scripts': [
+            'post_office = wallbox.post_office:main',
+        ],
+
     },
 )

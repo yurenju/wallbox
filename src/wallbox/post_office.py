@@ -667,7 +667,7 @@ class PostOffice (dbus.service.Object):
             if not os.path.exists (d):
                 subprocess.call (['mkdir', '-p', d])
 
-if __name__ == "__main__":
+def main ():
     dbus.mainloop.glib.DBusGMainLoop (set_as_default=True)
 
     bus = dbus.SessionBus ()
@@ -676,3 +676,6 @@ if __name__ == "__main__":
 
     mainloop = gobject.MainLoop ()
     mainloop.run ()
+
+if __name__ == "__main__":
+    main ()

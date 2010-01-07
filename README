@@ -20,17 +20,6 @@ In Debian Squeeze/Sid please install python-facebook:
 In Arch Linux please install pyfacebook-git from AUR.
 $ yaourt -S pyfacebook-git
 
------------------------------------------------------------------------------
- Configuration
------------------------------------------------------------------------------
-
-you need get secert.py and put it in wallbox/wallbox/, please contact 
-yurenju (AT) gmail (DOT) com. currently, we can't run application without 
-secery key.
-
-if you know how to run application without secert key, please 
-fork and patch it.
-
 
 -----------------------------------------------------------------------------
  Run

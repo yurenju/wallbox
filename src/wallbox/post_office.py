@@ -112,6 +112,12 @@ class RefreshProcess (threading.Thread):
 
         self.current_status = status[0]
 
+    def _filter_none (self, items):
+        for item in items:
+            for k in item:
+                if item[k] == None:
+                    item[k] = ""
+
     def get_remote_notification (self):
         logging.debug ("get remote notification")
         notification = self._query \
@@ -119,10 +125,7 @@ class RefreshProcess (threading.Thread):
             ", is_hidden, href, app_id, sender_id " + \
             "FROM notification WHERE recipient_id = '%s' LIMIT %s" % \
             (self.uid, self.notification_num))
-        for n in notification:
-            for skey in n:
-                if n[skey] == None:
-                    n[skey] = ""
+        self._filter_none (notification)
         self.last_nid = notification[0]['notification_id']
         self.notification = notification
 
@@ -238,6 +241,7 @@ class RefreshProcess (threading.Thread):
         self.users = \
             self.fb.users.getInfo (self.user_ids, ["name", "pic_square"])
 
+        self._filter_none (self.users)
 
         default_timeout = socket.getdefaulttimeout ()
         socket.setdefaulttimeout (GET_ICON_TIMEOUT)

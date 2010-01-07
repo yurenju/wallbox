@@ -91,14 +91,14 @@ class Comment:
         self.init_view ()
 
         utils.set_scollbar_height (self.window, self.treeview, self.builder.get_object ("scrolledwindow"))
-        gobject.timeout_add (300, self.delay_show_window)
-
-    def destroy (self):
-        self.window.destroy ()
-        return False
 
     def delay_show_window (self):
-        self.window.show ()
+        gobject.timeout_add (300, self.show_window)
+
+    def show_window (self):
+        if self.window.get_property ("visible") == False:
+            logging.debug ("delay show window")
+            self.window.show ()
         return False
 
     def on_button_share_clicked (self, button, data=None):

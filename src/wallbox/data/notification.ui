@@ -15,10 +15,11 @@
     </columns>
   </object>
   <object class="GtkWindow" id="notification_window">
+    <property name="resizable">False</property>
     <property name="skip_taskbar_hint">True</property>
     <property name="decorated">False</property>
     <child>
-      <object class="GtkAspectFrame" id="aspectframe1">
+      <object class="GtkAspectFrame" id="aspectframe">
         <property name="visible">True</property>
         <property name="label_xalign">0</property>
         <property name="shadow_type">out</property>
@@ -130,11 +131,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkImage" id="refresh_animation">
-                    <property name="visible">True</property>
-                    <property name="xalign">0.10000000149011612</property>
-                    <property name="stock">gtk-missing-image</property>
-                  </object>
+                  <object class="GtkProgressBar" id="progressbar_refresh"/>
                   <packing>
                     <property name="position">1</property>
                   </packing>

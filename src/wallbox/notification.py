@@ -20,7 +20,6 @@ class Notification (gobject.GObject):
     def __init__ (self, offline=False):
         logging.basicConfig (level=defs.log_level)
         gobject.GObject.__init__(self)
-        self.comment = None
         self.builder = gtk.Builder ()
 
         ui_file = pkg_resources.resource_filename \
@@ -32,6 +31,8 @@ class Notification (gobject.GObject):
         self.window.connect ("configure-event", self.on_window_resize)
         self.entry_status = self.builder.get_object ("entry_status")
         self.scrolledwindow = self.builder.get_object ("scrolledwindow")
+        self.comments = {}
+        self.comment_handler_id = None
 
         gobject.signal_new \
             ("has-unread", Notification, gobject.SIGNAL_RUN_LAST, \
@@ -71,14 +72,29 @@ class Notification (gobject.GObject):
         x = self.window.get_size ()[0]
         self.text_cell.set_property ("wrap-width", x - 50)
 
+    def _refresh_animation (self):
+        self.builder.get_object ("progressbar_refresh").pulse ()
+        return True
+
     def on_office_status_changed (self, status):
         link_refresh = self.builder.get_object ("link_refresh")
         if status == 1:
             #refresh
             link_refresh.set_label ("Refreshing....")
+            self.builder.get_object ("progressbar_refresh").show ()
+            self.refresh_handler_id = gobject.timeout_add (100, self._refresh_animation)
         else:
             self.refresh_reply_cb ()
             link_refresh.set_label ("Refresh")
+            self.builder.get_object ("progressbar_refresh").hide ()
+            gobject.source_remove (self.refresh_handler_id)
+            self.refresh_handler_id = None
+            (width, height) = self.builder.get_object ("aspectframe").request_size ()
+            self.window.set_size_request (width, height)
+
+    def delay_show_comment (self, post_id):
+        self.comments[post_id].window.show ()
+        self.comment_handler_id = None
 
     def on_notification_changed (self, sel):
         rect = self.treeview.get_allocation ()
@@ -100,17 +116,24 @@ class Notification (gobject.GObject):
         has_detail = list.get (it, 2)[0]
         logging.debug ("nid: %s" % nid)
         logging.debug ("has_detail: %s" % has_detail)
+
+        if self.comment_handler_id != None:
+            gobject.source_remove (self.comment_handler_id)
+            self.comment_handler_id = None
+
+        for k in self.comments:
+            if self.comments[k].window.get_property ("visible") == True:
+                self.comments[k].window.hide ()
         if has_detail:
-            if self.comment != None:
-                self.comment.window.destroy ()
             status = self.office.get_status_with_nid (nid)
             if status != {}:
                 logging.debug ("status: %s" % status['message'])
-                self.comment = comment.Comment (status['post_id'])
-                self.comment.window.move (candidate_x, candidate_y)
-        else:
-            if self.comment != None:
-                self.comment.window.destroy ()
+                if not self.comments.has_key (status['post_id']):
+                    self.comments[status['post_id']] = comment.Comment (status['post_id'])
+                logging.debug ("x, y: (%d, %d)" % (candidate_x, candidate_y))
+                self.comments[status['post_id']].window.move (candidate_x, candidate_y)
+                self.comment_handler_id = \
+                    gobject.timeout_add (300, self.delay_show_comment, status['post_id'])
 
     def on_mouse_motion (self, tree, event):
         (tree_x, tree_y) = tree.window.get_origin ()
@@ -205,6 +228,11 @@ class Notification (gobject.GObject):
 
         if has_unread == True:
             self.emit ("has-unread")
+
+        keys = [k for k in self.comments]
+        for k in keys:
+            self.comments[k].window.destroy ()
+            del self.comments[k]
 
         utils.set_scollbar_height (self.window, self.treeview, self.scrolledwindow)
 

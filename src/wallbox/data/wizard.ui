@@ -28,6 +28,9 @@
       <placeholder/>
     </child>
     <child>
+      <placeholder/>
+    </child>
+    <child>
       <object class="GtkLabel" id="label_welcome">
         <property name="visible">True</property>
         <property name="label" translatable="yes">welcome to &lt;b&gt;wallbox&lt;/b&gt; facebook notification. you need active application and get extra permession for &lt;b&gt;wallbox&lt;/b&gt;.
@@ -46,10 +49,11 @@ please press Forward to active application.
       <object class="GtkVBox" id="vbox_active">
         <property name="visible">True</property>
         <property name="orientation">vertical</property>
+        <property name="spacing">5</property>
         <child>
           <object class="GtkLabel" id="label_active">
             <property name="visible">True</property>
-            <property name="label" translatable="yes">before use wallbox, you need active wallbox in your facebook account. please press &lt;b&gt;Active wallbox&lt;/b&gt;.</property>
+            <property name="label" translatable="yes">before use wallbox, you need active wallbox in your facebook account. please press &lt;b&gt;Active wallbox&lt;/b&gt; to get session code in browser.</property>
             <property name="use_markup">True</property>
             <property name="wrap">True</property>
           </object>
@@ -81,33 +85,49 @@ please press Forward to active application.
           </packing>
         </child>
         <child>
+          <object class="GtkLabel" id="label_active_2">
+            <property name="visible">True</property>
+            <property name="label" translatable="yes">please fill session code on below text field and press continue.	</property>
+            <property name="wrap">True</property>
+          </object>
+          <packing>
+            <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkHBox" id="hbox_session_code">
             <property name="visible">True</property>
             <child>
               <object class="GtkEntry" id="entry_session_code">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="max_length">20</property>
                 <property name="invisible_char">&#x25CF;</property>
+                <property name="width_chars">20</property>
               </object>
               <packing>
+                <property name="fill">False</property>
                 <property name="position">0</property>
               </packing>
             </child>
             <child>
               <object class="GtkButton" id="button_session_code">
-                <property name="label" translatable="yes">button</property>
+                <property name="label" translatable="yes">continue</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <signal name="clicked" handler="on_button_session_code_clicked"/>
               </object>
               <packing>
+                <property name="fill">False</property>
                 <property name="position">1</property>
               </packing>
             </child>
           </object>
           <packing>
-            <property name="position">2</property>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">3</property>
           </packing>
         </child>
       </object>

@@ -89,8 +89,8 @@ class wallbox:
     def show_notification (self, icon, n):
         if n.window.get_property ("visible"):
             n.window.hide ()
-            if n.comment != None:
-                n.comment.window.destroy ()
+            for k in n.comments:
+                n.comments[k].window.hide ()
         else:
             self.status_icon.set_blinking (False)
             self.office.notification_mark_all_read \

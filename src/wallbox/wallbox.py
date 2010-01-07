@@ -109,7 +109,7 @@ def run_post_office ():
         logging.debug ("execute post_office.py")
         office = pkg_resources.resource_filename \
                     (__name__, "post_office.py")
-        Popen (["sh", office], shell=True)
+        Popen (["python %s" % office], shell=True)
         time.sleep (1)
         
 def run_wallbox ():

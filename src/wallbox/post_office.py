@@ -366,6 +366,7 @@ class PostOffice (dbus.service.Object):
             self.status_changed (IS_LOGIN)
         else:
             self.status_changed (NO_LOGIN)
+        gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
 
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='')
@@ -382,17 +383,17 @@ class PostOffice (dbus.service.Object):
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='')
     def notification_mark_all_read (self):
+        logging.debug ("notification_mark_all_read")
         ids = []
         for entry in self.notification:
             if entry['is_unread']:
+                entry['is_unread'] = False
                 ids.append (entry['notification_id'])
         if len (ids) == 0:
+            logging.debug ("no need to notification mark all read")
             return
-        try:
-            self.fb ("notifications_markRead", \
-                {"session_key": self.session['session_key'], "notification_ids": ids})
-        except:
-            logging.debug ("notification_mark_all_read failed")
+        self.fb ("notifications_markRead", \
+            {"session_key": self.session['session_key'], "notification_ids": ids})
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='i')
     def get_office_status (self):
@@ -561,6 +562,7 @@ class PostOffice (dbus.service.Object):
         return False
 
     def _refresh (self):
+        logging.debug ("refresh start")
         if self.office_status != IS_LOGIN:
             logging.debug ("not IS_LOGIN")
             return True

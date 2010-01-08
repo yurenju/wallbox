@@ -87,14 +87,16 @@ class wallbox:
         self.status_icon.set_blinking (True)
 
     def show_notification (self, icon, n):
+        if self.status_icon.get_blinking ():
+            self.status_icon.set_blinking (False)
         if n.window.get_property ("visible"):
             n.window.hide ()
+            n.refresh_reply_cb ()
+            self.office.notification_mark_all_read \
+                (reply_handler=read_all_reply_handler, error_handler=read_all_error_handler)
             for k in n.comments:
                 n.comments[k].window.hide ()
         else:
-            self.status_icon.set_blinking (False)
-            self.office.notification_mark_all_read \
-                (reply_handler=read_all_reply_handler, error_handler=read_all_error_handler)
             (screen, rect, orientation) = icon.get_geometry ()
             n.window.move (rect.x, rect.y+10)
             n.window.show ()

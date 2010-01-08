@@ -89,7 +89,7 @@ class Notification (gobject.GObject):
             self.builder.get_object ("progressbar_refresh").hide ()
             gobject.source_remove (self.refresh_handler_id)
             self.refresh_handler_id = None
-            (width, height) = self.builder.get_object ("aspectframe").request_size ()
+            (width, height) = self.builder.get_object ("aspectframe").size_request ()
             self.window.set_size_request (width, height)
 
     def delay_show_comment (self, post_id):
@@ -162,7 +162,7 @@ class Notification (gobject.GObject):
         self.column.pack_start (self.arrow_cell, False)
 
         self.column.set_cell_data_func (self.icon_cell, self.make_icon)
-        self.column.set_attributes (self.text_cell, text=1)
+        self.column.set_attributes (self.text_cell, markup=1)
         self.column.set_cell_data_func (self.arrow_cell, self.make_arrow)
 
     def make_icon (self, column, cell, model, iter):
@@ -213,13 +213,15 @@ class Notification (gobject.GObject):
             text = None
             has_detail = False
             
-            if entry['is_unread'] == True:
-                has_unread = True
 
             if len (entry['body_text']) == 0:
                 text = entry['title_text']
             else:
                 text = entry['body_text']
+
+            if entry['is_unread'] == True:
+                has_unread = True
+                text = "<b>%s</b>" % text
 
             if int (entry['app_id']) == 19675640871:
                 has_detail = True

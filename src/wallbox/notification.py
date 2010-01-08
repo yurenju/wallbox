@@ -90,7 +90,7 @@ class Notification (gobject.GObject):
             gobject.source_remove (self.refresh_handler_id)
             self.refresh_handler_id = None
             (width, height) = self.builder.get_object ("aspectframe").size_request ()
-            self.window.set_size_request (width, height)
+            self.scrolledwindow.set_size_request (-1, gtk.gdk.screen_height () /3*2)
 
     def delay_show_comment (self, post_id):
         self.comments[post_id].window.show ()
@@ -236,7 +236,7 @@ class Notification (gobject.GObject):
             self.comments[k].window.destroy ()
             del self.comments[k]
 
-        utils.set_scollbar_height (self.window, self.treeview, self.scrolledwindow)
+        self.scrolledwindow.set_size_request (-1, gtk.gdk.screen_height () /3*2)
 
     def refresh_error_cb (self, e):
         logging.debug (e)

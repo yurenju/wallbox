@@ -415,7 +415,7 @@ class PostOffice (dbus.service.Object):
         ext_perm_url = "http://www.facebook.com/" + \
             "connect/prompt_permissions.php" + \
             "?api_key=%s&fbconnect=true&v=1.0&display=popup" % self.api_key + \
-            "&extern=1&ext_perm=publish_stream" 
+            "&extern=1&ext_perm=publish_stream,read_stream" 
         import webbrowser
         webbrowser.open (ext_perm_url)
 

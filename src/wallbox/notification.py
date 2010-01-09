@@ -89,7 +89,7 @@ class Notification (gobject.GObject):
             self.builder.get_object ("progressbar_refresh").hide ()
             gobject.source_remove (self.refresh_handler_id)
             self.refresh_handler_id = None
-            (width, height) = self.builder.get_object ("aspectframe").request_size ()
+            (width, height) = self.builder.get_object ("aspectframe").size_request ()
             self.window.set_size_request (width, height)
 
     def delay_show_comment (self, post_id):

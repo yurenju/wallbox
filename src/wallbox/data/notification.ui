@@ -45,6 +45,7 @@
                 </child>
                 <child>
                   <object class="GtkLabel" id="label_current_status">
+                    <property name="width_request">200</property>
                     <property name="visible">True</property>
                     <property name="wrap">True</property>
                   </object>

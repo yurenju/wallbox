@@ -69,7 +69,16 @@ class RefreshProcess (threading.Thread):
         self.user_icons_dir = user_icons_dir
         self.app_icons_dir = app_icons_dir
         self.last_nid = last_nid
-    
+
+    def _dump_notification (self):
+        dump_str = "notification_id, title_text, body_text, is_unread" + \
+            ", is_hidden, href, app_id, sender_id\n"
+        for n in self.notification:
+            dump_str += "%s,%s,%s,%s,%s,%s,%s,%s\n" % \
+                (n['notification_id'], n['title_text'], n['body_text'], \
+                n['is_unread'], n['is_hidden'], n['href'], n['app_id'], n['sender_id'])
+        logging.debug (dump_str)
+
     def _dump_comments (self, post_id):
         logging.debug ("status: %s: %s" % (post_id, self.status[post_id]['message']))
         logging.debug ("comments:")
@@ -128,6 +137,7 @@ class RefreshProcess (threading.Thread):
         self._filter_none (notification)
         self.last_nid = notification[0]['notification_id']
         self.notification = notification
+        self._dump_notification ()
 
     def get_remote_comments (self):
         logging.debug ("get remote comments (fast)")
@@ -135,6 +145,9 @@ class RefreshProcess (threading.Thread):
         new_status = {}
 
         matched_ns = [n for n in self.notification if int (n['app_id']) == 19675640871]
+        if len (matched_ns) == 0:
+            return
+
         post_ids = []
         subquery = []
         for n in matched_ns:

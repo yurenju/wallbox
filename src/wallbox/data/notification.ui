@@ -16,6 +16,7 @@
   </object>
   <object class="GtkWindow" id="notification_window">
     <property name="resizable">False</property>
+    <property name="type_hint">menu</property>
     <property name="skip_taskbar_hint">True</property>
     <property name="decorated">False</property>
     <child>

@@ -364,6 +364,7 @@ class PostOffice (dbus.service.Object):
 
         if self.restore_auth_status ():
             self.status_changed (IS_LOGIN)
+            gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
         else:
             self.status_changed (NO_LOGIN)
 
@@ -562,12 +563,12 @@ class PostOffice (dbus.service.Object):
 
     def _refresh (self):
         if self.office_status != IS_LOGIN:
-            logging.debug ("not IS_LOGIN")
+            logging.info ("not IS_LOGIN")
             return True
 
         self.orig_office_status = self.office_status
         self.status_changed (REFRESHING)
-        logging.debug ("notification_num: %s" % self.notification_num)
+        logging.info ("notification_num: %s" % self.notification_num)
         self.rs = RefreshProcess \
             (self.notification_num, self.fb, self.uid, self.user_icons_dir, self.app_icons_dir, self.user_ids, self.last_nid)
         self.rs.start ()

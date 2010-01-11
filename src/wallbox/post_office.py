@@ -144,7 +144,9 @@ class RefreshProcess (threading.Thread):
         pattern_id = re.compile ("&id=(\d+)")
         new_status = {}
 
-        matched_ns = [n for n in self.notification if int (n['app_id']) == 19675640871]
+        matched_ns = [n for n in self.notification \
+            if int (n['app_id']) == 19675640871 or int (n['app_id']) == 2309869772]
+
         if len (matched_ns) == 0:
             return
 

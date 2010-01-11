@@ -231,7 +231,7 @@ class Notification (gobject.GObject):
                 has_unread = True
                 text = "<b>%s</b>" % text
 
-            if int (entry['app_id']) == 19675640871:
+            if int (entry['app_id']) == 19675640871 or int (entry['app_id']) == 2309869772:
                 has_detail = True
             liststore.append \
                 ([entry['app_id'], text, has_detail, int(entry['notification_id'])])

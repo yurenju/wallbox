@@ -8,7 +8,7 @@ setup (
     packages = find_packages ('src'),
     package_dir = {'':'src'},
 
-    package_data = { 'wallbox': ['data/*.ui', 'data/images/*.gif'] },
+    package_data = { 'wallbox': ['data/*.ui', 'data/images/*.gif', 'data/images/*.png'] },
 
     url = "http://github.com/yurenju/wallbox",
     author = "Yuren Ju",

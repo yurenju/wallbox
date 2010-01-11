@@ -14,6 +14,7 @@ import pango
 import defs
 import logging
 import utils
+import webbrowser
 
 class Notification (gobject.GObject):
 
@@ -82,7 +83,7 @@ class Notification (gobject.GObject):
             #refresh
             link_refresh.set_label ("Refreshing....")
             self.builder.get_object ("progressbar_refresh").show ()
-            self.refresh_handler_id = gobject.timeout_add (100, self._refresh_animation)
+            self.refresh_handler_id = gobject.timeout_add (50, self._refresh_animation)
         else:
             self.refresh_reply_cb ()
             link_refresh.set_label ("Refresh")
@@ -107,13 +108,13 @@ class Notification (gobject.GObject):
         if candidate_x > gtk.gdk.screen_width () - comment_width - 100:
             candidate_x = origin_x - comment_width - 20
         
-        list, it=sel.get_selected()
+        tlist, it=sel.get_selected()
         if it == None:
             return
-        nid = list.get (it, 3)[0]
+        nid = tlist.get (it, 3)[0]
         entry = self.office.get_notification_entry (nid)
         logging.info ("herf: " + entry['href'])
-        has_detail = list.get (it, 2)[0]
+        has_detail = tlist.get (it, 2)[0]
         logging.debug ("nid: %s" % nid)
         logging.debug ("has_detail: %s" % has_detail)
 
@@ -134,6 +135,13 @@ class Notification (gobject.GObject):
                 self.comments[status['post_id']].window.move (candidate_x, candidate_y)
                 self.comment_handler_id = \
                     gobject.timeout_add (300, self.delay_show_comment, status['post_id'])
+
+    def on_row_activated (self, treeview, path, view_column, data=None):
+        selection = treeview.get_selection ()
+        tlist, it = selection.get_selected()
+        nid = tlist.get (it, 3)[0]
+        entry = self.office.get_notification_entry (nid)
+        webbrowser.open (entry['href'])
 
     def on_mouse_motion (self, tree, event):
         (tree_x, tree_y) = tree.window.get_origin ()

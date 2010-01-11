@@ -108,6 +108,7 @@
                     <property name="headers_visible">False</property>
                     <property name="search_column">0</property>
                     <property name="hover_selection">True</property>
+                    <signal name="row_activated" handler="on_row_activated"/>
                   </object>
                 </child>
               </object>
@@ -134,7 +135,10 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkProgressBar" id="progressbar_refresh"/>
+                  <object class="GtkProgressBar" id="progressbar_refresh">
+                    <property name="pulse_step">0.02</property>
+                    <property name="discrete_blocks">20</property>
+                  </object>
                   <packing>
                     <property name="position">1</property>
                   </packing>

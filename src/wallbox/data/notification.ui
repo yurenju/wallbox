@@ -16,6 +16,7 @@
   </object>
   <object class="GtkWindow" id="notification_window">
     <property name="resizable">False</property>
+    <property name="type_hint">menu</property>
     <property name="skip_taskbar_hint">True</property>
     <property name="decorated">False</property>
     <child>
@@ -45,6 +46,7 @@
                 </child>
                 <child>
                   <object class="GtkLabel" id="label_current_status">
+                    <property name="width_request">200</property>
                     <property name="visible">True</property>
                     <property name="wrap">True</property>
                   </object>

@@ -84,15 +84,16 @@ class wallbox:
         n.connect ("has-unread", self.has_unread)
 
     def has_unread (self, data=None):
+        logging.debug ("has_unread")
         self.status_icon.set_blinking (True)
 
     def show_notification (self, icon, n):
         self.status_icon.set_blinking (False)
+        self.office.notification_mark_all_read \
+            (reply_handler=read_all_reply_handler, error_handler=read_all_error_handler)
+
         if n.window.get_property ("visible"):
             n.window.hide ()
-            n.refresh_reply_cb ()
-            self.office.notification_mark_all_read \
-                (reply_handler=read_all_reply_handler, error_handler=read_all_error_handler)
             for k in n.comments:
                 n.comments[k].window.hide ()
         else:

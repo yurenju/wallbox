@@ -231,7 +231,6 @@ class Notification (gobject.GObject):
             entry = self.office.get_notification_entry (nid)
             text = None
             has_detail = False
-            
 
             if len (entry['body_text']) == 0:
                 text = entry['title_text']

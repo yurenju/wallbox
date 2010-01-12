@@ -79,11 +79,12 @@ class RefreshProcess (threading.Thread):
                 n['is_unread'], n['is_hidden'], n['href'], n['app_id'], n['sender_id'])
         logging.debug (dump_str)
 
-    def _dump_comments (self, post_id):
-        logging.debug ("status: %s: %s" % (post_id, self.status[post_id]['message']))
-        logging.debug ("comments:")
-        for c in self.status[post_id]['comments']:
-            logging.debug ("\t%s" % c['text'])
+    def _dump_comments (self):
+        for post_id in self.status:
+            logging.debug ("status: %s: %s" % (post_id, self.status[post_id]['message']))
+            logging.debug ("comments:")
+            for c in self.status[post_id]['comments']:
+                logging.debug ("\t%s: %s" % (c['id'], c['text']))
 
     def _dump_status (self):
         logging.debug ("=== START === dump status")
@@ -203,6 +204,7 @@ class RefreshProcess (threading.Thread):
 
         self.status = new_status
         self._dump_status ()
+        self._dump_comments ()
 
     def get_remote_icon (self, url, local_path):
         local_size = 0
@@ -468,7 +470,8 @@ class PostOffice (dbus.service.Object):
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='ss', out_signature='')
     def post_comment (self, post_id, comment):
-        self.fb.stream.addComment (post_id=post_id, comment=comment)
+        cid = self.fb.stream.addComment (post_id=post_id, comment=comment)
+        self.status[post_id]['comments'].append ({'text': comment, 'fromid': self.uid, 'time': 0, 'id': cid})
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='i', out_signature='')
     def set_notification_num (self, num):

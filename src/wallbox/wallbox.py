@@ -87,8 +87,7 @@ class wallbox:
         self.status_icon.set_blinking (True)
 
     def show_notification (self, icon, n):
-        if self.status_icon.get_blinking ():
-            self.status_icon.set_blinking (False)
+        self.status_icon.set_blinking (False)
         if n.window.get_property ("visible"):
             n.window.hide ()
             n.refresh_reply_cb ()

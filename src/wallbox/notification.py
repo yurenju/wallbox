@@ -56,7 +56,7 @@ class Notification (gobject.GObject):
             ("status_changed", self.on_office_status_changed, \
             dbus_interface="org.wallbox.PostOfficeInterface")
 
-    def height_request (self):
+    def get_min_monitor_height (self):
         min_height = 4096
         screen = gtk.gdk.screen_get_default ()
         monitor_num = screen.get_n_monitors ()
@@ -65,7 +65,7 @@ class Notification (gobject.GObject):
             if rect.height < min_height:
                 min_height = rect.height
 
-        return min_height / 3 * 2
+        return min_height
 
     def on_link_refresh_clicked (self, link, data=None):
         logging.debug ("on_link_refresh_clicked")
@@ -102,7 +102,7 @@ class Notification (gobject.GObject):
             gobject.source_remove (self.refresh_handler_id)
             self.refresh_handler_id = None
             (width, height) = self.builder.get_object ("aspectframe").size_request ()
-            self.scrolledwindow.set_size_request (-1, self.height_request())
+            self.scrolledwindow.set_size_request (-1, self.get_min_monitor_height() / 3 * 2)
 
     def delay_show_comment (self, post_id):
         self.comments[post_id].window.show ()
@@ -142,6 +142,13 @@ class Notification (gobject.GObject):
                 logging.debug ("status: %s" % status['message'])
                 if not self.comments.has_key (status['post_id']):
                     self.comments[status['post_id']] = comment.Comment (status['post_id'])
+
+                rect = self.comments[status['post_id']].window.get_allocation ()
+                if candidate_y + rect.height > self.get_min_monitor_height () - 30 :
+                    logging.debug ("orig candidate_y: %d" % candidate_y)
+                    candidate_y = self.get_min_monitor_height () - rect.height - 30
+                    logging.debug ("modify candidate_y: %d" % candidate_y)
+
                 logging.debug ("x, y: (%d, %d)" % (candidate_x, candidate_y))
                 self.comments[status['post_id']].window.move (candidate_x, candidate_y)
                 self.comment_handler_id = \
@@ -254,7 +261,7 @@ class Notification (gobject.GObject):
             self.comments[k].window.destroy ()
             del self.comments[k]
 
-        self.scrolledwindow.set_size_request (-1, self.height_request ())
+        self.scrolledwindow.set_size_request (-1, self.get_min_monitor_height () / 3 * 2)
 
     def refresh_error_cb (self, e):
         logging.debug (e)

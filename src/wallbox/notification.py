@@ -56,6 +56,17 @@ class Notification (gobject.GObject):
             ("status_changed", self.on_office_status_changed, \
             dbus_interface="org.wallbox.PostOfficeInterface")
 
+    def height_request (self):
+        min_height = 4096
+        screen = gtk.gdk.screen_get_default ()
+        monitor_num = screen.get_n_monitors ()
+        for i in range (monitor_num):
+            rect = screen.get_monitor_geometry (i)
+            if rect.height < min_height:
+                min_height = rect.height
+
+        return min_height / 3 * 2
+
     def on_link_refresh_clicked (self, link, data=None):
         logging.debug ("on_link_refresh_clicked")
         self.office.refresh ()
@@ -91,7 +102,7 @@ class Notification (gobject.GObject):
             gobject.source_remove (self.refresh_handler_id)
             self.refresh_handler_id = None
             (width, height) = self.builder.get_object ("aspectframe").size_request ()
-            self.scrolledwindow.set_size_request (-1, gtk.gdk.screen_height () /3*2)
+            self.scrolledwindow.set_size_request (-1, self.height_request())
 
     def delay_show_comment (self, post_id):
         self.comments[post_id].window.show ()
@@ -244,7 +255,7 @@ class Notification (gobject.GObject):
             self.comments[k].window.destroy ()
             del self.comments[k]
 
-        self.scrolledwindow.set_size_request (-1, gtk.gdk.screen_height () /3*2)
+        self.scrolledwindow.set_size_request (-1, self.height_request ())
 
     def refresh_error_cb (self, e):
         logging.debug (e)

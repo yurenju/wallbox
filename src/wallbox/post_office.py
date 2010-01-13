@@ -15,10 +15,11 @@ import re
 import datetime
 import threading
 import gtk
-import pickle
 import socket
 import defs
 import logging
+import utils
+import pickle
 
 __author__ = 'Yuren Ju <yurenju@gmail.com>'
 
@@ -367,11 +368,12 @@ class PostOffice (dbus.service.Object):
         self.office_status = NO_LOGIN
         self.last_nid = 0
         self.prepare_directories ()
-        self.cache_attributes = \
-            ["current_status", "notification", "status", \
-            "user_ids", "users", "app_ids", "applications"]
-        self.pickle_load ()
 
+        path = self.local_data_dir + "/cache.pickle"
+        cache = utils.pickle_load (path)
+        if cache != None:
+            for skey in cache:
+                setattr (self, skey, cache[skey])
 
         try:
             dbus.service.Object.__init__ (self, bus_name, bus_path)
@@ -379,11 +381,20 @@ class PostOffice (dbus.service.Object):
             logging.debug ("DBus interface registration failed - other wallbox running somewhere")
             pass
 
-        if self.restore_auth_status ():
+        path = self.local_data_dir + "/auth.pickle"
+        fb = utils.restore_auth_status (path, self.api_key, self.secret)
+        if fb != None:
+            self.uid = fb.uid
             self.status_changed (IS_LOGIN)
+            self.fb = fb
+
+            if self.uid not in self.user_ids:
+                self.user_ids.append (self.uid)
+
             gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
         else:
             self.status_changed (NO_LOGIN)
+
         gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
 
 
@@ -422,7 +433,8 @@ class PostOffice (dbus.service.Object):
         self.fb = facebook.Facebook (self.api_key, self.secret, self.session_code)
         self.session = self.fb.auth.getSession ()
         self.uid = self.fb.users.getInfo ([self.fb.uid])[0]['uid']
-        self.save_auth_status ()
+        path = self.local_data_dir + "/auth.pickle"
+        utils.save_auth_status (path, self.session)
         if self.uid not in self.user_ids:
             self.user_ids.append (self.uid)
         self.status_changed (IS_LOGIN)
@@ -500,63 +512,6 @@ class PostOffice (dbus.service.Object):
                 return c
         return {}
 
-    def save_auth_status (self):
-        path = self.local_data_dir + "/auth.pickle"
-        auth = {}
-        auth["session_key"] = self.session['session_key']
-        auth["secret"] = self.session['secret']
-        output = open (path, 'wb')
-        pickle.dump (auth, output)
-        output.close ()
-
-    def restore_auth_status (self):
-        path = self.local_data_dir + "/auth.pickle"
-        if os.path.exists (path):
-            f = open (path, 'r')
-            try:
-                auth = pickle.load (f)
-            except:
-                f.close ()
-                logging.debug ("pickle load failed")
-                return False
-
-            f.close ()
-            self.fb = facebook.Facebook (self.api_key, self.secret)
-            self.fb.session_key = auth["session_key"]
-            self.fb.uid = auth["session_key"].split('-')[1]
-            self.uid = self.fb.uid
-            if self.uid not in self.user_ids:
-                self.user_ids.append (self.uid)
-            self.fb.secret = auth["secret"]
-            return True
-        else:
-            "pickle auth not exist"
-            return False
-
-    def pickle_load (self):
-        cache = None
-        path = self.local_data_dir + "/cache.pickle"
-        if os.path.exists (path):
-            f = open (path, 'r')
-            try:
-                cache = pickle.load (f)
-            except:
-                logging.debug ("load cache pickle failed")
-                return
-            f.close ()
-            for skey in cache:
-                setattr (self, skey, cache[skey])
-        else:
-            logging.debug ("cache.pickle not found")
-
-    def pickle_dump (self):
-        cache = {}
-        for attr_str in self.cache_attributes:
-            attr = getattr (self, attr_str)
-            cache[attr_str] = attr
-        output = open (self.local_data_dir + "/cache.pickle", 'wb')
-        pickle.dump (cache, output)
-        output.close ()
 
     def check_refresh_complete (self):
         if self.rs.isAlive ():
@@ -574,8 +529,8 @@ class PostOffice (dbus.service.Object):
         self.users = self.rs.users
         self.app_ids = self.rs.app_ids
         self.applications = self.rs.applications
-
-        self.pickle_dump ()
+        path = self.local_data_dir + "/cache.pickle"
+        utils.pickle_dump (self, path)
 
         self.status_changed (self.orig_office_status)
         return False

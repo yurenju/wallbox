@@ -15,8 +15,10 @@ import urllib
 import urllib2
 import os
 import logging
+import defs
 
 logging.basicConfig (level=defs.log_level)
+GET_ICON_TIMEOUT = 3
 
 class TimeoutError(Exception):
     def __init__ (self, value):
@@ -54,7 +56,7 @@ class Postman (dbus.service.Object):
         self.current_status = None
         self.app_ids = []
         self.applications = {}
-        self.user_ids = []
+        self.user_ids = [self.uid]
         self.users = []
         self.status = {}
         self.updated_timestamp = None
@@ -65,7 +67,13 @@ class Postman (dbus.service.Object):
         self.app_icons_dir = \
             "%s/app_icons" % local_data_dir
         self.last_nid = 0
+        self.postman_status = defs.REFRESH_STATUS_COMPLETED
         logging.debug ("postman setup completed")
+
+    @dbus.service.signal ("org.wallbox.PostmanInterface", signature='i')
+    def status_changed (self, status):
+        self.postman_status = status
+        logging.debug ("emit signal: %s" % status)
 
     def _dump_notification (self):
         dump_str = "notification_id, title_text, body_text, is_unread" + \
@@ -326,23 +334,113 @@ class Postman (dbus.service.Object):
         else:
             return 0
 
-    def run (self):
+    @dbus.service.method ("org.wallbox.PostmanInterface", in_signature='', out_signature='a{sv}')
+    def get_current_status (self):
+        if self.current_status == None or len (self.current_status) < 1:
+            return {}
+        logging.debug ("%s\n" % self.current_status['message'])
+        return self.current_status
+
+    @dbus.service.method ("org.wallbox.PostmanInterface", in_signature='', out_signature='as')
+    def get_status_list (self):
+        skey = []
+        for k in self.status:
+            skey.append (k)
+        return skey
+
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='a{sv}')
+    def get_status (self, post_id):
+        result = self.status[post_id].copy ()
+        logging.debug (result)
+        if result.has_key ('comments'):
+            del result['comments']
+        if len (result) < 1:
+            return {}
+        return result
+
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='as')
+    def get_comments_list (self, post_id):
+        clist = []
+        for s in self.status:
+            logging.debug ("post_id: %s" % s)
+        for c in self.status[post_id]['comments']:
+            clist.append (c['id'])
+            logging.debug ("\t%s" % c['id'])
+        print
+        return clist
+
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='ss', out_signature='a{sv}')
+    def get_comment_entry (self, post_id, id):
+        comments = self.status[post_id]['comments']
+        for c in comments:
+            if c['id'] == id:
+                return c
+        return {}
+
+    @dbus.service.method ("org.wallbox.PostmanInterface", in_signature='', out_signature='ai')
+    def get_notification_list (self):
+        nlist = []
+        for n in self.notification:
+            nlist.append (int (n['notification_id']))
+        return nlist
+
+    @dbus.service.method ("org.wallbox.PostmanInterface", in_signature='i', out_signature='a{sv}')
+    def get_notification_entry (self, notification_id):
+        for n in self.notification:
+            if int (n['notification_id']) == notification_id:
+                return n
+        else:
+            return {}
+
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='x', out_signature='a{sv}')
+    def get_user (self, uid):
+        for u in self.users:
+            if int (u['uid']) == int (uid):
+                return u
+        return {}
+
+    @dbus.service.method ("org.wallbox.PostmanInterface", in_signature='', out_signature='ai')
+    def get_user_list (self):
+        uids = []
+        for u in self.users:
+            uids.append (long (u['uid']))
+        return uids
+
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='x', out_signature='a{sv}')
+    def get_application (self, app_id):
+        return self.applications[app_id]
+
+    @dbus.service.method ("org.wallbox.PostmanInterface", in_signature='', out_signature='ai')
+    def get_app_list (self):
+        app_ids = []
+        for k in self.applications:
+            app_ids.append (app_ids)
+        return app_ids
+
+    @dbus.service.method ("org.wallbox.PostmanInterface", in_signature='', out_signature='')
+    def refresh (self):
         last_nid = self.get_remote_last_nid ()
         if last_nid == self.last_nid:
             logging.debug ("no need to update notification")
             return
         self.get_remote_current_status ()
+        self.status_changed (defs.REFRESH_STATUS_GET_CURRENT_STATUS)
         time.sleep (1)
         self.get_remote_notification ()
+        self.status_changed (defs.REFRESH_STATUS_GET_NOTIFICATION)
         time.sleep (1)
         self.get_remote_comments ()
+        self.status_changed (defs.REFRESH_STATUS_GET_COMMENTS)
         time.sleep (1)
         self.get_remote_users_icon ()
+        self.status_changed (defs.REFRESH_STATUS_GET_USERS_ICON)
         time.sleep (1)
         self.get_remote_applications_icon ()
+        self.status_changed (defs.REFRESH_STATUS_GET_APPS_ICON)
         time.sleep (1)
         self.updated_timestamp = datetime.date.today ()
         logging.debug ("updated finish")
+        self.status_changed (defs.REFRESH_STATUS_COMPLETED)
 
 def main ():
     dbus.mainloop.glib.DBusGMainLoop (set_as_default=True)

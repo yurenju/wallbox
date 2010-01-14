@@ -10,24 +10,17 @@ import os
 import defs
 import logging
 import utils
+import time
 
 __author__ = 'Yuren Ju <yurenju@gmail.com>'
 
-IS_LOGIN = 0
-REFRESHING = 1
-WAITING_LOGIN = 2
-NO_LOGIN = 3
-
-GET_ICON_TIMEOUT = 3
 
 logging.basicConfig (level=defs.log_level)
 
 class PostOffice (dbus.service.Object):
     def __init__ (self, bus_name, bus_path):
         self.current_status = None
-        self.app_ids = []
         self.applications = {}
-        self.user_ids = []
         self.users = []
         self.status = {}
         self.updated_timestamp = None
@@ -38,9 +31,17 @@ class PostOffice (dbus.service.Object):
         self.session_code = None
         self.api_key = '9103981b8f62c7dbede9757113372240'
         self.secret = '4cd1dffd6bf0d466bf9ffcf2dcf7805c'
-        self.office_status = NO_LOGIN
+        self.office_status = defs.NO_LOGIN
         self.last_nid = 0
         self.prepare_directories ()
+        self.run_postman ()
+
+        bus = dbus.SessionBus ()
+        obj = bus.get_object ("org.wallbox.PostmanService", \
+            "/org/wallbox/PostmanObject")
+
+        self.postman = dbus.Interface \
+            (obj, "org.wallbox.PostmanInterface")
 
         path = self.local_data_dir + "/cache.pickle"
         cache = utils.pickle_load (path)
@@ -58,18 +59,23 @@ class PostOffice (dbus.service.Object):
         fb = utils.restore_auth_status (path, self.api_key, self.secret)
         if fb != None:
             self.uid = fb.uid
-            self.status_changed (IS_LOGIN)
+            self.status_changed (defs.IS_LOGIN)
             self.fb = fb
-
-            if self.uid not in self.user_ids:
-                self.user_ids.append (self.uid)
+            self.postman.setup \
+                (self.api_key, self.secret, self.notification_num, self.local_data_dir)
 
             gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
         else:
-            self.status_changed (NO_LOGIN)
+            self.status_changed (defs.NO_LOGIN)
 
         gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
 
+
+    def run_postman (self):
+        postman = pkg_resources.resource_filename \
+                    (__name__, "postman.py")
+        Popen (["python %s" % postman], shell=True)
+        time.sleep (1)
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='')
     def set_session_code (self, session_code):
@@ -108,9 +114,7 @@ class PostOffice (dbus.service.Object):
         self.uid = self.fb.users.getInfo ([self.fb.uid])[0]['uid']
         path = self.local_data_dir + "/auth.pickle"
         utils.save_auth_status (path, self.session)
-        if self.uid not in self.user_ids:
-            self.user_ids.append (self.uid)
-        self.status_changed (IS_LOGIN)
+        self.status_changed (defs.IS_LOGIN)
 
         gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
 
@@ -127,8 +131,7 @@ class PostOffice (dbus.service.Object):
     def login_completed (self):
         self.session = self.fb.auth.getSession ()
         self.uid = self.fb.users.getInfo ([self.fb.uid])[0]['uid']
-        self.user_ids.append (self.uid)
-        self.status_changed (IS_LOGIN)
+        self.status_changed (defs.IS_LOGIN)
 
         gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
 
@@ -185,42 +188,60 @@ class PostOffice (dbus.service.Object):
                 return c
         return {}
 
+    def on_postman_status_changed (self, status):
+        if status == REFRESH_STATUS_GET_CURRENT_STATUS:
+            self.current_status = self.postman.get_current_status ()
+        elif status == REFRESH_STATUS_GET_NOTIFICATION:
+            nlist = self.postman.get_notification_list ()
+            notification = []
+            for nid in nlist:
+                n = self.postman.get_notification_entry (nid)
+            self.notification = notification
+        elif status == REFRESH_STATUS_GET_COMMENTS:
+            new_status = []
+            post_ids = self.postman.get_status_list ()
+            for post_id in post_ids:
+                s = self.postman.get_status (post_id)
+                comments = []
+                clist = self.postman.get_comments_list (post_id)
+                for cid in clist:
+                    c = self.postman.get_comment_entry (post_id, cid)
+                    comments.append (c)
+                s['comments'] = comments
+                new_status.append (s)
 
-    def check_refresh_complete (self):
-        if self.rs.isAlive ():
-            return True
+            self.status = new_status
+        elif status == REFRESH_STATUS_GET_USERS_ICON:
+            uids = self.postman.get_user_list ()
+            users = []
+            for uid in uids:
+                users.append (self.postman.get_user (uid))
+            self.users = users
+        elif status == REFRESH_STATUS_GET_APPS_ICON:
+            app = []
+            app_ids = self.postman.get_app_list ()
+            for app_id in app_ids:
+                app.append (self.postman.get_application (app_id))
+            self.applications = app
 
-        if self.last_nid == self.rs.last_nid:
+        if status == REFRESH_STATUS_COMPLETED:
+            path = self.local_data_dir + "/cache.pickle"
+            utils.pickle_dump (self, path)
             self.status_changed (self.orig_office_status)
-            return False
-
-        self.last_nid = self.rs.last_nid
-        self.current_status = self.rs.current_status
-        self.notification = self.rs.notification
-        self.status = self.rs.status
-        self.user_ids = self.rs.user_ids
-        self.users = self.rs.users
-        self.app_ids = self.rs.app_ids
-        self.applications = self.rs.applications
-        path = self.local_data_dir + "/cache.pickle"
-        utils.pickle_dump (self, path)
-
-        self.status_changed (self.orig_office_status)
-        return False
 
     def _refresh (self):
         logging.debug ("refresh start")
-        if self.office_status != IS_LOGIN:
+        if self.office_status != defs.IS_LOGIN:
             logging.info ("not IS_LOGIN")
             return True
 
         self.orig_office_status = self.office_status
-        self.status_changed (REFRESHING)
+        self.status_changed (defs.REFRESHING)
         logging.info ("notification_num: %s" % self.notification_num)
-        self.rs = RefreshProcess \
-            (self.notification_num, self.fb, self.uid, self.user_icons_dir, self.app_icons_dir, self.user_ids, self.last_nid)
-        self.rs.start ()
-        gobject.timeout_add (1000, self.check_refresh_complete)
+        self.postman.refresh ()
+        self.postman.connect_to_signal \
+            ("status_changed", self.on_postman_status_changed, \
+            dbus_interface="org.wallbox.PostmanInterface")
 
         return True
 

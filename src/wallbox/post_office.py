@@ -70,6 +70,12 @@ class RefreshProcess (threading.Thread):
         self.user_icons_dir = user_icons_dir
         self.app_icons_dir = app_icons_dir
         self.last_nid = last_nid
+        self.refresh_status = {"current_status": False, \
+                                "notification": False, \
+                                "comments": False, \
+                                "users_icon": False, \
+                                "apps_icon": False, \
+                                "last_notification": False}
 
     def _dump_notification (self):
         dump_str = "notification_id, title_text, body_text, is_unread" + \
@@ -122,6 +128,7 @@ class RefreshProcess (threading.Thread):
         status = self._query (qstr)
 
         self.current_status = status[0]
+        self.refresh_status["current_status"] = True
 
     def _filter_none (self, items):
         for item in items:
@@ -140,6 +147,7 @@ class RefreshProcess (threading.Thread):
         self.last_nid = notification[0]['notification_id']
         self.notification = notification
         self._dump_notification ()
+        self.refresh_status["notification"] = True
 
     def get_remote_comments (self):
         logging.debug ("get remote comments (fast)")
@@ -206,6 +214,7 @@ class RefreshProcess (threading.Thread):
         self.status = new_status
         self._dump_status ()
         self._dump_comments ()
+        self.refresh_status["comments"] = True
 
     def get_remote_icon (self, url, local_path):
         local_size = 0
@@ -288,6 +297,7 @@ class RefreshProcess (threading.Thread):
                 u['pic_square_local'] = ""
                 
         socket.setdefaulttimeout (default_timeout)
+        self.refresh_status["users_icon"] = True
 
     def get_remote_applications_icon (self):
         logging.debug ("get remote applications icon")
@@ -320,11 +330,14 @@ class RefreshProcess (threading.Thread):
                 icon_name = ""
             self.applications[int (app['app_id'])] = {'icon_name': icon_name}
         socket.setdefaulttimeout (default_timeout)
+        self.refresh_status["apps_icon"] = True
 
     def get_remote_last_nid (self):
         qstr = "SELECT notification_id FROM notification " + \
                 "WHERE recipient_id = %d LIMIT 1" % int (self.uid)
         result = self._query (qstr)
+        logging.debug ("get last nid: %d" % int (result[0]['notification_id']))
+        logging.debug ("orignal nid: %d" % int (self.last_nid))
         if len (result) > 0:
             return result[0]['notification_id']
         else:
@@ -335,6 +348,8 @@ class RefreshProcess (threading.Thread):
         if last_nid == self.last_nid:
             logging.debug ("no need to update notification")
             return
+        self.last_nid = last_nid
+        self.refresh_status["last_notification"] = True
         self.get_remote_current_status ()
         time.sleep (1)
         self.get_remote_notification ()
@@ -514,21 +529,45 @@ class PostOffice (dbus.service.Object):
 
 
     def check_refresh_complete (self):
-        if self.rs.isAlive ():
+        if self.rs.refresh_status["last_notification"] == False:
             return True
 
-        if self.last_nid == self.rs.last_nid:
+        logging.debug ("last_nid::::::::::::::::::::%d" % int (self.last_nid))
+        if self.last_nid == self.rs.last_nid and int (self.last_nid) != 0:
+            logging.debug ("self.last_nid == self.rs.last_nid")
             self.status_changed (self.orig_office_status)
             return False
 
+        if self.rs.refresh_status["current_status"] == True and \
+            self.current_status != self.rs.current_status:
+            self.current_status = self.rs.current_status
+
+        if self.rs.refresh_status["notification"] == True and \
+            self.notification != self.rs.notification:
+            self.notification = self.rs.notification
+
+        if self.rs.refresh_status["comments"] == True and \
+            self.status != self.rs.status:
+            self.status = self.rs.status
+
+        if self.rs.refresh_status["users_icon"] == True and \
+            self.users != self.users:
+            self.user_ids = self.rs.user_ids
+            self.users = self.rs.users
+
+        if self.rs.refresh_status["apps_icon"] == True and \
+            self.applications != self.rs.applications:
+            self.app_ids = self.rs.app_ids
+            self.applications = self.rs.applications
+
+        if self.rs.isAlive ():
+            return True
+
+        logging.debug ("completed")
         self.last_nid = self.rs.last_nid
-        self.current_status = self.rs.current_status
-        self.notification = self.rs.notification
-        self.status = self.rs.status
-        self.user_ids = self.rs.user_ids
-        self.users = self.rs.users
-        self.app_ids = self.rs.app_ids
-        self.applications = self.rs.applications
+        for k in self.rs.refresh_status:
+            self.rs.refresh_status[k] = False
+
         path = self.local_data_dir + "/cache.pickle"
         utils.pickle_dump (self, path)
 

@@ -75,7 +75,8 @@ class RefreshProcess (threading.Thread):
                                 "comments": False, \
                                 "users_icon": False, \
                                 "apps_icon": False, \
-                                "last_notification": False}
+                                "last_notification": False, \
+                                "no_need_update": False}
 
     def _dump_notification (self):
         dump_str = "notification_id, title_text, body_text, is_unread" + \
@@ -347,6 +348,7 @@ class RefreshProcess (threading.Thread):
         last_nid = self.get_remote_last_nid ()
         if last_nid == self.last_nid:
             logging.debug ("no need to update notification")
+            self.refresh_status["no_need_update"] = True
             return
         self.last_nid = last_nid
         self.refresh_status["last_notification"] = True
@@ -529,11 +531,15 @@ class PostOffice (dbus.service.Object):
 
 
     def check_refresh_complete (self):
+        if self.rs.refresh_status["no_need_update"]:
+            self.status_changed (self.orig_office_status)
+            return False
+
         if self.rs.refresh_status["last_notification"] == False:
             return True
 
-        logging.debug ("last_nid::::::::::::::::::::%d" % int (self.last_nid))
-        if self.last_nid == self.rs.last_nid and int (self.last_nid) != 0:
+        logging.debug ("last_nid:%d, rs.last_nid:%d" %  (int (self.last_nid), int (self.rs.last_nid)))
+        if int (self.last_nid) == int (self.rs.last_nid) and int (self.last_nid) != 0:
             logging.debug ("self.last_nid == self.rs.last_nid")
             self.status_changed (self.orig_office_status)
             return False

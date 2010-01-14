@@ -12,7 +12,7 @@ import facebook
 logging.basicConfig (level=defs.log_level)
 cache_attributes = \
     ["current_status", "notification", "status", \
-    "user_ids", "users", "app_ids", "applications"]
+     "users", "applications"]
 
 def set_scollbar_height (window, treeview, scrollbar):
     (width, height) = window.get_size ()

@@ -11,11 +11,19 @@ import defs
 import logging
 import utils
 import time
+import pkg_resources
+from subprocess import Popen
 
 __author__ = 'Yuren Ju <yurenju@gmail.com>'
 
 
 logging.basicConfig (level=defs.log_level)
+
+def refresh_reply_handler (reply=None):
+    pass
+
+def refresh_error_handler (error=None):
+    pass
 
 class PostOffice (dbus.service.Object):
     def __init__ (self, bus_name, bus_path):
@@ -64,6 +72,10 @@ class PostOffice (dbus.service.Object):
             self.postman.setup \
                 (self.api_key, self.secret, self.notification_num, self.local_data_dir)
 
+            self.postman.connect_to_signal \
+                ("status_changed", self.on_postman_status_changed, \
+                dbus_interface="org.wallbox.PostmanInterface")
+
             gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
         else:
             self.status_changed (defs.NO_LOGIN)
@@ -72,6 +84,7 @@ class PostOffice (dbus.service.Object):
 
 
     def run_postman (self):
+        logging.debug ("run_postman")
         postman = pkg_resources.resource_filename \
                     (__name__, "postman.py")
         Popen (["python %s" % postman], shell=True)
@@ -189,15 +202,15 @@ class PostOffice (dbus.service.Object):
         return {}
 
     def on_postman_status_changed (self, status):
-        if status == REFRESH_STATUS_GET_CURRENT_STATUS:
+        if status == defs.REFRESH_STATUS_GET_CURRENT_STATUS:
             self.current_status = self.postman.get_current_status ()
-        elif status == REFRESH_STATUS_GET_NOTIFICATION:
+        elif status == defs.REFRESH_STATUS_GET_NOTIFICATION:
             nlist = self.postman.get_notification_list ()
             notification = []
             for nid in nlist:
                 n = self.postman.get_notification_entry (nid)
             self.notification = notification
-        elif status == REFRESH_STATUS_GET_COMMENTS:
+        elif status == defs.REFRESH_STATUS_GET_COMMENTS:
             new_status = []
             post_ids = self.postman.get_status_list ()
             for post_id in post_ids:
@@ -211,20 +224,20 @@ class PostOffice (dbus.service.Object):
                 new_status.append (s)
 
             self.status = new_status
-        elif status == REFRESH_STATUS_GET_USERS_ICON:
+        elif status == defs.REFRESH_STATUS_GET_USERS_ICON:
             uids = self.postman.get_user_list ()
             users = []
             for uid in uids:
                 users.append (self.postman.get_user (uid))
             self.users = users
-        elif status == REFRESH_STATUS_GET_APPS_ICON:
+        elif status == defs.REFRESH_STATUS_GET_APPS_ICON:
             app = []
             app_ids = self.postman.get_app_list ()
             for app_id in app_ids:
                 app.append (self.postman.get_application (app_id))
             self.applications = app
 
-        if status == REFRESH_STATUS_COMPLETED:
+        if status == defs.REFRESH_STATUS_COMPLETED:
             path = self.local_data_dir + "/cache.pickle"
             utils.pickle_dump (self, path)
             self.status_changed (self.orig_office_status)
@@ -238,10 +251,7 @@ class PostOffice (dbus.service.Object):
         self.orig_office_status = self.office_status
         self.status_changed (defs.REFRESHING)
         logging.info ("notification_num: %s" % self.notification_num)
-        self.postman.refresh ()
-        self.postman.connect_to_signal \
-            ("status_changed", self.on_postman_status_changed, \
-            dbus_interface="org.wallbox.PostmanInterface")
+        self.postman.refresh (reply_handler=refresh_reply_handler, error_handler=refresh_error_handler)
 
         return True
 

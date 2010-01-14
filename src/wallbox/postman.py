@@ -348,7 +348,7 @@ class Postman (dbus.service.Object):
             skey.append (k)
         return skey
 
-    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='a{sv}')
+    @dbus.service.method ("org.wallbox.PostmanInterface", in_signature='s', out_signature='a{sv}')
     def get_status (self, post_id):
         result = self.status[post_id].copy ()
         logging.debug (result)
@@ -358,7 +358,7 @@ class Postman (dbus.service.Object):
             return {}
         return result
 
-    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='as')
+    @dbus.service.method ("org.wallbox.PostmanInterface", in_signature='s', out_signature='as')
     def get_comments_list (self, post_id):
         clist = []
         for s in self.status:
@@ -369,7 +369,7 @@ class Postman (dbus.service.Object):
         print
         return clist
 
-    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='ss', out_signature='a{sv}')
+    @dbus.service.method ("org.wallbox.PostmanInterface", in_signature='ss', out_signature='a{sv}')
     def get_comment_entry (self, post_id, id):
         comments = self.status[post_id]['comments']
         for c in comments:
@@ -392,29 +392,29 @@ class Postman (dbus.service.Object):
         else:
             return {}
 
-    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='x', out_signature='a{sv}')
+    @dbus.service.method ("org.wallbox.PostmanInterface", in_signature='x', out_signature='a{sv}')
     def get_user (self, uid):
         for u in self.users:
             if int (u['uid']) == int (uid):
                 return u
         return {}
 
-    @dbus.service.method ("org.wallbox.PostmanInterface", in_signature='', out_signature='ai')
+    @dbus.service.method ("org.wallbox.PostmanInterface", in_signature='', out_signature='ax')
     def get_user_list (self):
         uids = []
         for u in self.users:
             uids.append (long (u['uid']))
         return uids
 
-    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='x', out_signature='a{sv}')
+    @dbus.service.method ("org.wallbox.PostmanInterface", in_signature='x', out_signature='a{sv}')
     def get_application (self, app_id):
         return self.applications[app_id]
 
-    @dbus.service.method ("org.wallbox.PostmanInterface", in_signature='', out_signature='ai')
+    @dbus.service.method ("org.wallbox.PostmanInterface", in_signature='', out_signature='ax')
     def get_app_list (self):
         app_ids = []
-        for k in self.applications:
-            app_ids.append (app_ids)
+        for app_id in self.applications:
+            app_ids.append (app_id)
         return app_ids
 
     @dbus.service.method ("org.wallbox.PostmanInterface", in_signature='', out_signature='')

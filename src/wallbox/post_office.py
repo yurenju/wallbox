@@ -28,6 +28,7 @@ REFRESHING = 1
 WAITING_LOGIN = 2
 NO_LOGIN = 3
 
+
 GET_ICON_TIMEOUT = 3
 
 gtk.gdk.threads_init()
@@ -529,7 +530,6 @@ class PostOffice (dbus.service.Object):
                 return c
         return {}
 
-
     def check_refresh_complete (self):
         if self.rs.refresh_status["no_need_update"]:
             self.status_changed (self.orig_office_status)
@@ -538,7 +538,6 @@ class PostOffice (dbus.service.Object):
         if self.rs.refresh_status["last_notification"] == False:
             return True
 
-        logging.debug ("last_nid:%d, rs.last_nid:%d" %  (int (self.last_nid), int (self.rs.last_nid)))
         if int (self.last_nid) == int (self.rs.last_nid) and int (self.last_nid) != 0:
             logging.debug ("self.last_nid == self.rs.last_nid")
             self.status_changed (self.orig_office_status)
@@ -547,6 +546,7 @@ class PostOffice (dbus.service.Object):
         if self.rs.refresh_status["current_status"] == True and \
             self.current_status != self.rs.current_status:
             self.current_status = self.rs.current_status
+            self.refresh_status_changed (defs.CURRENT_STATUS_COMPLETED)
 
         if self.rs.refresh_status["notification"] == True and \
             self.notification != self.rs.notification:
@@ -556,15 +556,20 @@ class PostOffice (dbus.service.Object):
             self.status != self.rs.status:
             self.status = self.rs.status
 
+            if self.rs.refresh_status["notification"] == True:
+                self.refresh_status_changed (defs.NOTIFICATION_COMMENTS_COMPLETED)
+
         if self.rs.refresh_status["users_icon"] == True and \
             self.users != self.users:
             self.user_ids = self.rs.user_ids
             self.users = self.rs.users
+            self.refresh_status_changed (defs.USERS_ICON_COMPLETED)
 
         if self.rs.refresh_status["apps_icon"] == True and \
             self.applications != self.rs.applications:
             self.app_ids = self.rs.app_ids
             self.applications = self.rs.applications
+            self.refresh_status_changed (defs.APPS_ICON_COMPLETED)
 
         if self.rs.isAlive ():
             return True
@@ -673,6 +678,10 @@ class PostOffice (dbus.service.Object):
     def status_changed (self, status):
         self.office_status = status
         logging.debug ("emit signal: %s" % status)
+
+    @dbus.service.signal ("org.wallbox.PostOfficeInterface", signature='i')
+    def refresh_status_changed (self, status):
+        logging.debug ("refresh emit signal: %s" % status)
 
     def prepare_directories (self):
         self.local_data_dir = \

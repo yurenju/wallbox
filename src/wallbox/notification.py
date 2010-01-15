@@ -55,6 +55,9 @@ class Notification (gobject.GObject):
         self.office.connect_to_signal \
             ("status_changed", self.on_office_status_changed, \
             dbus_interface="org.wallbox.PostOfficeInterface")
+        self.office.connect_to_signal \
+            ("refresh_status_changed", self.on_refresh_status_changed, \
+            dbus_interface="org.wallbox.PostOfficeInterface")
 
     def get_min_monitor_height (self):
         min_height = 4096
@@ -87,6 +90,60 @@ class Notification (gobject.GObject):
     def _refresh_animation (self):
         self.builder.get_object ("progressbar_refresh").pulse ()
         return True
+
+    def refresh_notification_comments (self):
+        nlist = self.office.get_notification_list ()
+        liststore = self.builder.get_object ("list_notification")
+        liststore.clear ()
+        has_unread = False
+        for nid in nlist:
+            entry = self.office.get_notification_entry (nid)
+            text = None
+            has_detail = False
+
+            if len (entry['body_text']) == 0:
+                text = entry['title_text']
+            else:
+                text = entry['body_text']
+
+            if entry['is_unread'] == True:
+                has_unread = True
+                text = "<b>%s</b>" % text
+
+            if int (entry['app_id']) == 19675640871 or int (entry['app_id']) == 2309869772:
+                has_detail = True
+            liststore.append \
+                ([entry['app_id'], text, has_detail, int(entry['notification_id'])])
+
+        if has_unread == True:
+            self.emit ("has-unread")
+
+    def refresh_users_icon (self):
+        user = self.office.get_current_user ()
+        pic_square = self.builder.get_object ("image_pic_square")
+        user_icon_path = self.office.get_user_icons_dir ()
+
+        if len (user) != 0:
+            pic_square.set_from_file (user_icon_path + '/' + user['pic_square_local'])
+        else:
+            img_file = pkg_resources.resource_filename \
+                        (__name__, "data/images/q_silhouette.gif")
+            pic_square.set_from_file (img_file)
+
+    def refresh_current_status (self):
+        logging.debug ("CURRENT_STATUS_COMPLETED")
+        label = self.builder.get_object ("label_current_status")
+        status = self.office.get_current_status ()
+        if len (status) != 0:
+            label.set_text (status['message'])
+
+    def on_refresh_status_changed (self, status):
+        if status == defs.CURRENT_STATUS_COMPLETED:
+            self.refresh_current_status ()
+        if status == defs.NOTIFICATION_COMMENTS_COMPLETED:
+            self.refresh_notification_comments ()
+        if status == defs.USERS_ICON_COMPLETED:
+            self.refresh_users_icon ()
 
     def on_office_status_changed (self, status):
         link_refresh = self.builder.get_object ("link_refresh")
@@ -214,47 +271,9 @@ class Notification (gobject.GObject):
         cell.set_property ('text', arrow)
 
     def refresh_reply_cb (self, data=None):
-        label = self.builder.get_object ("label_current_status")
-        status = self.office.get_current_status ()
-        if len (status) != 0:
-            label.set_text (status['message'])
-        user = self.office.get_current_user ()
-        pic_square = self.builder.get_object ("image_pic_square")
-        user_icon_path = self.office.get_user_icons_dir ()
-
-        if len (user) != 0:
-            pic_square.set_from_file (user_icon_path + '/' + user['pic_square_local'])
-        else:
-            img_file = pkg_resources.resource_filename \
-                        (__name__, "data/images/q_silhouette.gif")
-            pic_square.set_from_file (img_file)
-            
-
-        nlist = self.office.get_notification_list ()
-        liststore = self.builder.get_object ("list_notification")
-        liststore.clear ()
-        has_unread = False
-        for nid in nlist:
-            entry = self.office.get_notification_entry (nid)
-            text = None
-            has_detail = False
-
-            if len (entry['body_text']) == 0:
-                text = entry['title_text']
-            else:
-                text = entry['body_text']
-
-            if entry['is_unread'] == True:
-                has_unread = True
-                text = "<b>%s</b>" % text
-
-            if int (entry['app_id']) == 19675640871 or int (entry['app_id']) == 2309869772:
-                has_detail = True
-            liststore.append \
-                ([entry['app_id'], text, has_detail, int(entry['notification_id'])])
-
-        if has_unread == True:
-            self.emit ("has-unread")
+        self.refresh_current_status ()
+        self.refresh_users_icon ()
+        self.refresh_notification_comments ()
 
         keys = [k for k in self.comments]
         for k in keys:

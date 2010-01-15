@@ -15,6 +15,7 @@ import defs
 import logging
 import utils
 import webbrowser
+import os
 
 class Notification (gobject.GObject):
 
@@ -144,6 +145,8 @@ class Notification (gobject.GObject):
             self.refresh_notification_comments ()
         if status == defs.USERS_ICON_COMPLETED:
             self.refresh_users_icon ()
+        if status == defs.APPS_ICON_COMPLETED:
+            self.refresh_notification_comments ()
 
     def on_office_status_changed (self, status):
         link_refresh = self.builder.get_object ("link_refresh")
@@ -253,10 +256,13 @@ class Notification (gobject.GObject):
         app = self.office.get_application (int(app_id))
         icons_dir = self.office.get_app_icons_dir ()
         icon = None
-        if app['icon_name'] != "":
-            icon = gtk.image_new_from_file ("%s/%s" % (icons_dir, app['icon_name']))
+        img_file = "%s/%s" % (icons_dir, app['icon_name'])
+        if app['icon_name'] != "" and os.path.exists (img_file):
+            icon = gtk.image_new_from_file (img_file)
         else:
-            icon = gtk.image_new_from_stock (gtk.STOCK_MISSING_IMAGE, 32)
+            img_file = pkg_resources.resource_filename \
+                        (__name__, "data/images/empty.gif")
+            icon = gtk.image_new_from_file (img_file)
         try:    
             pixbuf = icon.get_pixbuf ()
         except:

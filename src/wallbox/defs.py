@@ -2,8 +2,9 @@
 
 import logging
 
-log_level = logging.DEBUG
+log_level = logging.INFO
 
+REFRESH_START = 4
 NOTIFICATION_COMMENTS_COMPLETED = 0
 CURRENT_STATUS_COMPLETED = 1
 USERS_ICON_COMPLETED = 2

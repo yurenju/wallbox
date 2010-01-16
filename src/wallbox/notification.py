@@ -35,6 +35,7 @@ class Notification (gobject.GObject):
         self.scrolledwindow = self.builder.get_object ("scrolledwindow")
         self.comments = {}
         self.comment_handler_id = None
+        self.progressbar_refresh = self.builder.get_object ("progressbar_refresh")
 
         gobject.signal_new \
             ("has-unread", Notification, gobject.SIGNAL_RUN_LAST, \
@@ -47,18 +48,19 @@ class Notification (gobject.GObject):
         self.office = dbus.Interface \
             (obj, "org.wallbox.PostOfficeInterface")
 
-        self.init_view ()
-
-        self.office.refresh ()
-        self.on_office_status_changed (1)
-        self.refresh_reply_cb ()
-
         self.office.connect_to_signal \
             ("status_changed", self.on_office_status_changed, \
             dbus_interface="org.wallbox.PostOfficeInterface")
         self.office.connect_to_signal \
             ("refresh_status_changed", self.on_refresh_status_changed, \
             dbus_interface="org.wallbox.PostOfficeInterface")
+
+        self.init_view ()
+
+        self.office.refresh ()
+        self.on_office_status_changed (1)
+        self.refresh_reply_cb ()
+
 
     def get_min_monitor_height (self):
         min_height = 4096
@@ -89,7 +91,7 @@ class Notification (gobject.GObject):
         self.text_cell.set_property ("wrap-width", x - 50)
 
     def _refresh_animation (self):
-        self.builder.get_object ("progressbar_refresh").pulse ()
+        self.progressbar_refresh.pulse ()
         return True
 
     def refresh_notification_comments (self):
@@ -139,13 +141,19 @@ class Notification (gobject.GObject):
             label.set_text (status['message'])
 
     def on_refresh_status_changed (self, status):
+        if status == defs.REFRESH_START:
+            self.progressbar_refresh.set_text ("get current status")
         if status == defs.CURRENT_STATUS_COMPLETED:
+            self.progressbar_refresh.set_text ("get notification")
             self.refresh_current_status ()
         if status == defs.NOTIFICATION_COMMENTS_COMPLETED:
+            self.progressbar_refresh.set_text ("download users icon")
             self.refresh_notification_comments ()
         if status == defs.USERS_ICON_COMPLETED:
+            self.progressbar_refresh.set_text ("download apps icon")
             self.refresh_users_icon ()
         if status == defs.APPS_ICON_COMPLETED:
+            self.progressbar_refresh.set_text ("")
             self.refresh_notification_comments ()
 
     def on_office_status_changed (self, status):
@@ -153,12 +161,12 @@ class Notification (gobject.GObject):
         if status == 1:
             #refresh
             link_refresh.set_label ("Refreshing....")
-            self.builder.get_object ("progressbar_refresh").show ()
+            self.progressbar_refresh.show ()
             self.refresh_handler_id = gobject.timeout_add (50, self._refresh_animation)
         else:
             self.refresh_reply_cb ()
             link_refresh.set_label ("Refresh")
-            self.builder.get_object ("progressbar_refresh").hide ()
+            self.progressbar_refresh.hide ()
             gobject.source_remove (self.refresh_handler_id)
             self.refresh_handler_id = None
             (width, height) = self.builder.get_object ("aspectframe").size_request ()
@@ -251,18 +259,26 @@ class Notification (gobject.GObject):
         self.column.set_attributes (self.text_cell, markup=1)
         self.column.set_cell_data_func (self.arrow_cell, self.make_arrow)
 
+    def _get_empty_image (self):
+        img_file = pkg_resources.resource_filename \
+                    (__name__, "data/images/empty.gif")
+        return gtk.image_new_from_file (img_file)
+
     def make_icon (self, column, cell, model, iter):
         app_id = model.get_value (iter, 0)
         app = self.office.get_application (int(app_id))
         icons_dir = self.office.get_app_icons_dir ()
         icon = None
-        img_file = "%s/%s" % (icons_dir, app['icon_name'])
-        if app['icon_name'] != "" and os.path.exists (img_file):
-            icon = gtk.image_new_from_file (img_file)
+
+        if len (app) == 0:
+            icon = self._get_empty_image ()
         else:
-            img_file = pkg_resources.resource_filename \
-                        (__name__, "data/images/empty.gif")
-            icon = gtk.image_new_from_file (img_file)
+            img_file = "%s/%s" % (icons_dir, app['icon_name'])
+            if app['icon_name'] != "" and os.path.exists (img_file):
+                icon = gtk.image_new_from_file (img_file)
+            else:
+                icon = self._get_empty_image ()
+
         try:    
             pixbuf = icon.get_pixbuf ()
         except:

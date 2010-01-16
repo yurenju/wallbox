@@ -124,7 +124,7 @@ class RefreshProcess (threading.Thread):
         return None
             
     def get_remote_current_status (self):
-        logging.debug ("get remote current status")
+        logging.info ("get remote current status")
         qstr = "SELECT uid, status_id, message, " + \
                 "source FROM status WHERE uid='%s' LIMIT 1" % self.uid
         status = self._query (qstr)
@@ -139,7 +139,7 @@ class RefreshProcess (threading.Thread):
                     item[k] = ""
 
     def get_remote_notification (self):
-        logging.debug ("get remote notification")
+        logging.info ("get remote notification")
         notification = self._query \
             ("SELECT notification_id, title_text, body_text, is_unread" + \
             ", is_hidden, href, app_id, sender_id " + \
@@ -152,7 +152,7 @@ class RefreshProcess (threading.Thread):
         self.refresh_status["notification"] = True
 
     def get_remote_comments (self):
-        logging.debug ("get remote comments (fast)")
+        logging.info ("get remote comments (fast)")
         pattern_id = re.compile ("&id=(\d+)")
         new_status = {}
 
@@ -219,6 +219,7 @@ class RefreshProcess (threading.Thread):
         self.refresh_status["comments"] = True
 
     def get_remote_icon (self, url, local_path):
+        logging.debug ("get_remote_icon: %s" % url)
         local_size = 0
 
         icon_name = os.path.basename \
@@ -258,7 +259,7 @@ class RefreshProcess (threading.Thread):
             return icon_name
 
     def get_remote_users_icon (self):
-        logging.debug ("get remote users icon")
+        logging.info("get remote users icon")
         for n in self.notification:
             if not n['sender_id'] in self.user_ids:
                 self.user_ids.append (n['sender_id'])
@@ -277,6 +278,7 @@ class RefreshProcess (threading.Thread):
         logging.debug ("socket timeout: %s" % socket.getdefaulttimeout ())
         timeout_count = 0
         for u in self.users:
+            logging.debug ("user: %s, pic_square: %s" % (u['name'], u['pic_square']))
             if (u['pic_square'] != None and len (u['pic_square']) > 0):
                 if timeout_count < 3:
                     try:
@@ -302,7 +304,7 @@ class RefreshProcess (threading.Thread):
         self.refresh_status["users_icon"] = True
 
     def get_remote_applications_icon (self):
-        logging.debug ("get remote applications icon")
+        logging.info ("get remote applications icon")
         for n in self.notification:
             if not str (n['app_id']) in self.app_ids:
                 self.app_ids.append (str (n['app_id']))
@@ -335,6 +337,7 @@ class RefreshProcess (threading.Thread):
         self.refresh_status["apps_icon"] = True
 
     def get_remote_last_nid (self):
+        logging.info ("get_remote_last_nid")
         qstr = "SELECT notification_id FROM notification " + \
                 "WHERE recipient_id = %d LIMIT 1" % int (self.uid)
         result = self._query (qstr)
@@ -543,30 +546,27 @@ class PostOffice (dbus.service.Object):
             self.status_changed (self.orig_office_status)
             return False
 
-        if self.rs.refresh_status["current_status"] == True and \
-            self.current_status != self.rs.current_status:
+        if self.rs.refresh_status["current_status"] == True:
+            self.rs.refresh_status["current_status"] = False
             self.current_status = self.rs.current_status
             self.refresh_status_changed (defs.CURRENT_STATUS_COMPLETED)
 
         if self.rs.refresh_status["notification"] == True and \
-            self.notification != self.rs.notification:
+                self.rs.refresh_status["comments"] == True:
+            self.rs.refresh_status["notification"] = False
+            self.rs.refresh_status["comments"] = False
             self.notification = self.rs.notification
-
-        if self.rs.refresh_status["comments"] == True and \
-            self.status != self.rs.status:
             self.status = self.rs.status
+            self.refresh_status_changed (defs.NOTIFICATION_COMMENTS_COMPLETED)
 
-            if self.rs.refresh_status["notification"] == True:
-                self.refresh_status_changed (defs.NOTIFICATION_COMMENTS_COMPLETED)
-
-        if self.rs.refresh_status["users_icon"] == True and \
-            self.users != self.users:
+        if self.rs.refresh_status["users_icon"] == True:
+            self.rs.refresh_status["users_icon"] = False
             self.user_ids = self.rs.user_ids
             self.users = self.rs.users
             self.refresh_status_changed (defs.USERS_ICON_COMPLETED)
 
-        if self.rs.refresh_status["apps_icon"] == True and \
-            self.applications != self.rs.applications:
+        if self.rs.refresh_status["apps_icon"] == True:
+            self.rs.refresh_status["apps_icon"] = False
             self.app_ids = self.rs.app_ids
             self.applications = self.rs.applications
             self.refresh_status_changed (defs.APPS_ICON_COMPLETED)
@@ -597,6 +597,7 @@ class PostOffice (dbus.service.Object):
         self.rs = RefreshProcess \
             (self.notification_num, self.fb, self.uid, self.user_icons_dir, self.app_icons_dir, self.user_ids, self.last_nid)
         self.rs.start ()
+        self.refresh_status_changed (defs.REFRESH_START)
         gobject.timeout_add (1000, self.check_refresh_complete)
 
         return True
@@ -647,7 +648,9 @@ class PostOffice (dbus.service.Object):
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='x', out_signature='a{sv}')
     def get_application (self, app_id):
-        return self.applications[app_id]
+        if self.applications.has_key (app_id):
+            return self.applications[app_id]
+        return {}
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='a{sv}')
     def get_current_user (self):
@@ -664,6 +667,9 @@ class PostOffice (dbus.service.Object):
         for u in self.users:
             if int (u['uid']) == int (uid):
                 return u
+        logging.info ("not find user: %d" % uid)
+        usernames = [u['name'] for u in self.users]
+        logging.info (usernames)
         return {}
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='s')
@@ -681,7 +687,7 @@ class PostOffice (dbus.service.Object):
 
     @dbus.service.signal ("org.wallbox.PostOfficeInterface", signature='i')
     def refresh_status_changed (self, status):
-        logging.debug ("refresh emit signal: %s" % status)
+        logging.info ("refresh emit signal: %s" % status)
 
     def prepare_directories (self):
         self.local_data_dir = \

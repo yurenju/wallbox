@@ -70,8 +70,13 @@ class Comment:
 
         current_pic = self.builder.get_object ("current_user_pic")
         current_user = self.office.get_current_user ()
-        icon_path = "%s/%s" % \
-            (user_icons_dir, current_user['pic_square_local'])
+        if current_user.has_key ("pic_square_local"):
+            icon_path = "%s/%s" % \
+                (user_icons_dir, current_user['pic_square_local'])
+        else:
+            icon_path = pkg_resources.resource_filename \
+                        (__name__, "data/images/q_silhouette.gif")
+            
         pixbuf = None
         try:
             pixbuf = gtk.image_new_from_file (icon_path).get_pixbuf ()

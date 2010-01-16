@@ -227,7 +227,10 @@ class Notification (gobject.GObject):
         tlist, it = selection.get_selected()
         nid = tlist.get (it, 3)[0]
         entry = self.office.get_notification_entry (nid)
-        webbrowser.open (entry['href'])
+        if len (entry['href']) > 0:
+            webbrowser.open (entry['href'])
+        else:
+            webbrowser.open ("http://www.facebook.com/notifications.php")
 
     def on_mouse_motion (self, tree, event):
         (tree_x, tree_y) = tree.window.get_origin ()

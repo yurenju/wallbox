@@ -142,15 +142,15 @@ class Notification (gobject.GObject):
 
     def on_refresh_status_changed (self, status):
         if status == defs.REFRESH_START:
-            self.progressbar_refresh.set_text ("get current status")
+            self.progressbar_refresh.set_text ("getting current status")
         if status == defs.CURRENT_STATUS_COMPLETED:
-            self.progressbar_refresh.set_text ("get notification")
+            self.progressbar_refresh.set_text ("getting notifications")
             self.refresh_current_status ()
         if status == defs.NOTIFICATION_COMMENTS_COMPLETED:
-            self.progressbar_refresh.set_text ("download users icon")
+            self.progressbar_refresh.set_text ("downloading users icon")
             self.refresh_notification_comments ()
         if status == defs.USERS_ICON_COMPLETED:
-            self.progressbar_refresh.set_text ("download apps icon")
+            self.progressbar_refresh.set_text ("downloading apps icon")
             self.refresh_users_icon ()
         if status == defs.APPS_ICON_COMPLETED:
             self.progressbar_refresh.set_text ("")

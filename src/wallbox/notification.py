@@ -116,7 +116,7 @@ class Notification (gobject.GObject):
             if int (entry['app_id']) == 19675640871 or int (entry['app_id']) == 2309869772:
                 has_detail = True
             liststore.append \
-                ([entry['app_id'], text, has_detail, int(entry['notification_id'])])
+                ([entry['app_id'], utils.unescape (text), has_detail, int(entry['notification_id'])])
 
         if has_unread == True:
             self.emit ("has-unread")

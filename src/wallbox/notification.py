@@ -162,7 +162,7 @@ class Notification (gobject.GObject):
             #refresh
             link_refresh.set_label ("Refreshing....")
             self.progressbar_refresh.show ()
-            self.refresh_handler_id = gobject.timeout_add (50, self._refresh_animation)
+            self.refresh_handler_id = gobject.timeout_add (150, self._refresh_animation)
         else:
             self.refresh_reply_cb ()
             link_refresh.set_label ("Refresh")

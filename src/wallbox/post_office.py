@@ -23,10 +23,6 @@ import pickle
 
 __author__ = 'Yuren Ju <yurenju@gmail.com>'
 
-IS_LOGIN = 0
-REFRESHING = 1
-WAITING_LOGIN = 2
-NO_LOGIN = 3
 
 
 GET_ICON_TIMEOUT = 3
@@ -386,7 +382,7 @@ class PostOffice (dbus.service.Object):
         self.session_code = None
         self.api_key = '9103981b8f62c7dbede9757113372240'
         self.secret = '4cd1dffd6bf0d466bf9ffcf2dcf7805c'
-        self.office_status = NO_LOGIN
+        self.office_status = defs.NO_LOGIN
         self.last_nid = 0
         self.prepare_directories ()
 
@@ -406,7 +402,7 @@ class PostOffice (dbus.service.Object):
         fb = utils.restore_auth_status (path, self.api_key, self.secret)
         if fb != None:
             self.uid = fb.uid
-            self.status_changed (IS_LOGIN)
+            self.status_changed (defs.IS_LOGIN)
             self.fb = fb
 
             if self.uid not in self.user_ids:
@@ -414,7 +410,7 @@ class PostOffice (dbus.service.Object):
 
             gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
         else:
-            self.status_changed (NO_LOGIN)
+            self.status_changed (defs.NO_LOGIN)
 
         gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
 
@@ -458,7 +454,7 @@ class PostOffice (dbus.service.Object):
         utils.save_auth_status (path, self.session)
         if self.uid not in self.user_ids:
             self.user_ids.append (self.uid)
-        self.status_changed (IS_LOGIN)
+        self.status_changed (defs.IS_LOGIN)
 
         gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
 
@@ -476,7 +472,7 @@ class PostOffice (dbus.service.Object):
         self.session = self.fb.auth.getSession ()
         self.uid = self.fb.users.getInfo ([self.fb.uid])[0]['uid']
         self.user_ids.append (self.uid)
-        self.status_changed (IS_LOGIN)
+        self.status_changed (defs.IS_LOGIN)
 
         gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
 
@@ -587,12 +583,12 @@ class PostOffice (dbus.service.Object):
 
     def _refresh (self):
         logging.debug ("refresh start")
-        if self.office_status != IS_LOGIN:
+        if self.office_status != defs.IS_LOGIN:
             logging.info ("not IS_LOGIN")
             return True
 
         self.orig_office_status = self.office_status
-        self.status_changed (REFRESHING)
+        self.status_changed (defs.REFRESHING)
         logging.info ("notification_num: %s" % self.notification_num)
         self.rs = RefreshProcess \
             (self.notification_num, self.fb, self.uid, self.user_icons_dir, self.app_icons_dir, self.user_ids, self.last_nid)

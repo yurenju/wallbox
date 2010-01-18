@@ -29,7 +29,6 @@ class wallbox:
     config_parser = None
 
     def __init__ (self):
-
         bus = dbus.SessionBus ()
         obj = bus.get_object ("org.wallbox.PostOfficeService", \
             "/org/wallbox/PostOfficeObject")
@@ -38,18 +37,19 @@ class wallbox:
             (obj, "org.wallbox.PostOfficeInterface")
 
         status = self.office.get_office_status ()
-        if status == 3:
+        if status == defs.NO_LOGIN:
             self.wizard = wizard.Wizard ()
             self.wizard.assistant.connect ("apply", self.wizard_finish, None)
         else:
-            self.post_init ()
+            self.setup_configuration ()
+            self.make_ui ()
 
     def wizard_finish (self, widget, data=None):
-        logging.debug (self.wizard.assistant)
         self.wizard.assistant.hide ()
-        self.post_init ()
+        self.setup_configuration ()
+        self.make_ui ()
 
-    def post_init (self):
+    def setup_configuration (self):
         config_dir = os.path.expanduser ("~/.config")
         if not os.path.exists (config_dir):
             os.mkdir (config_dir)
@@ -77,6 +77,7 @@ class wallbox:
         configfile = open (config_dir + "/wallbox.conf", 'wb')
         self.config_parser.write (configfile)
 
+    def make_ui (self):
         status_icon = gtk.status_icon_new_from_stock (gtk.STOCK_OPEN)
         n = notification.Notification ()
         self.status_icon = status_icon
@@ -108,7 +109,7 @@ def run_post_office ():
         obj = bus.get_object ("org.wallbox.PostOfficeService", \
             "/org/wallbox/PostOfficeObject")
     except:
-        logging.debug ("execute post_office.py")
+        logging.info ("execute post_office.py")
         office = pkg_resources.resource_filename \
                     (__name__, "post_office.py")
         Popen (["python %s" % office], shell=True)

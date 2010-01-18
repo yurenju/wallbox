@@ -8,7 +8,6 @@ import logging
 import pickle
 import os
 import facebook
-import htmllib
 
 logging.basicConfig (level=defs.log_level)
 cache_attributes = \
@@ -81,11 +80,3 @@ def pickle_dump (post_office, path):
     pickle.dump (cache, output)
     output.close ()
 
-def unescape (s):
-    try:
-        p = htmllib.HTMLParser (None)
-        p.save_bgn ()
-        p.feed (s)
-        return p.save_end ()
-    except:
-        return p

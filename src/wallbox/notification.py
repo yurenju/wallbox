@@ -16,6 +16,7 @@ import logging
 import utils
 import webbrowser
 import os
+from HTMLParser import HTMLParser
 
 class Notification (gobject.GObject):
 
@@ -23,6 +24,7 @@ class Notification (gobject.GObject):
         logging.basicConfig (level=defs.log_level)
         gobject.GObject.__init__(self)
         self.builder = gtk.Builder ()
+        self.html_parser = HTMLParser ()
 
         ui_file = pkg_resources.resource_filename \
                     (__name__, "data/notification.ui")
@@ -116,7 +118,7 @@ class Notification (gobject.GObject):
             if int (entry['app_id']) == 19675640871 or int (entry['app_id']) == 2309869772:
                 has_detail = True
             liststore.append \
-                ([entry['app_id'], utils.unescape (text), has_detail, int(entry['notification_id'])])
+                ([entry['app_id'], self.html_parser.unescape (text), has_detail, int(entry['notification_id'])])
 
         if has_unread == True:
             self.emit ("has-unread")

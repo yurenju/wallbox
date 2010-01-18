@@ -82,7 +82,10 @@ def pickle_dump (post_office, path):
     output.close ()
 
 def unescape (s):
-    p = htmllib.HTMLParser (None)
-    p.save_bgn ()
-    p.feed (s)
-    return p.save_end ()
+    try:
+        p = htmllib.HTMLParser (None)
+        p.save_bgn ()
+        p.feed (s)
+        return p.save_end ()
+    except:
+        return p

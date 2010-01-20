@@ -5,7 +5,6 @@ import gobject
 import dbus.service
 import dbus.mainloop.glib
 import facebook
-import subprocess
 import os
 import urllib
 import urllib2
@@ -22,8 +21,6 @@ import utils
 import pickle
 
 __author__ = 'Yuren Ju <yurenju@gmail.com>'
-
-
 
 GET_ICON_TIMEOUT = 3
 
@@ -697,7 +694,7 @@ class PostOffice (dbus.service.Object):
 
         for d in [self.user_icons_dir, self.app_icons_dir]:
             if not os.path.exists (d):
-                subprocess.call (['mkdir', '-p', d])
+                os.makedirs (d)
 
 def main ():
     dbus.mainloop.glib.DBusGMainLoop (set_as_default=True)

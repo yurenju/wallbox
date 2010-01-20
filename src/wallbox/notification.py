@@ -57,22 +57,9 @@ class Notification (gobject.GObject):
             dbus_interface="org.wallbox.PostOfficeInterface")
 
         self.init_view ()
-
         self.office.refresh ()
         self.on_office_status_changed (1)
-        self.refresh_reply_cb ()
-
-
-    def get_min_monitor_height (self):
-        min_height = 4096
-        screen = gtk.gdk.screen_get_default ()
-        monitor_num = screen.get_n_monitors ()
-        for i in range (monitor_num):
-            rect = screen.get_monitor_geometry (i)
-            if rect.height < min_height:
-                min_height = rect.height
-
-        return min_height
+        self.view_refresh ()
 
     def on_link_refresh_clicked (self, link, data=None):
         logging.debug ("on_link_refresh_clicked")
@@ -116,7 +103,8 @@ class Notification (gobject.GObject):
                 has_unread = True
                 text = "<b>%s</b>" % text
 
-            if int (entry['app_id']) == 19675640871 or int (entry['app_id']) == 2309869772:
+            status = self.office.get_status_with_nid (int (entry['notification_id']))
+            if len (status) != 0:
                 has_detail = True
             liststore.append \
                 ([entry['app_id'], text, has_detail, int(entry['notification_id'])])
@@ -167,13 +155,13 @@ class Notification (gobject.GObject):
             self.progressbar_refresh.show ()
             self.refresh_handler_id = gobject.timeout_add (150, self._refresh_animation)
         else:
-            self.refresh_reply_cb ()
+            self.view_refresh ()
             link_refresh.set_label ("Refresh")
             self.progressbar_refresh.hide ()
             gobject.source_remove (self.refresh_handler_id)
             self.refresh_handler_id = None
             (width, height) = self.builder.get_object ("aspectframe").size_request ()
-            self.scrolledwindow.set_size_request (-1, self.get_min_monitor_height() / 3 * 2)
+            self.scrolledwindow.set_size_request (-1, utils.get_min_monitor_height() / 3 * 2)
 
     def delay_show_comment (self, post_id):
         self.comments[post_id].window.show ()
@@ -190,7 +178,7 @@ class Notification (gobject.GObject):
         if candidate_x > gtk.gdk.screen_width () - comment_width - 100:
             candidate_x = origin_x - comment_width - 20
         
-        tlist, it=sel.get_selected()
+        tlist, it = sel.get_selected()
         if it == None:
             return
         nid = tlist.get (it, 3)[0]
@@ -215,9 +203,9 @@ class Notification (gobject.GObject):
                     self.comments[status['post_id']] = comment.Comment (status['post_id'])
 
                 rect = self.comments[status['post_id']].window.get_allocation ()
-                if candidate_y + rect.height > self.get_min_monitor_height () - 30 :
+                if candidate_y + rect.height > utils.get_min_monitor_height () - 30 :
                     logging.debug ("orig candidate_y: %d" % candidate_y)
-                    candidate_y = self.get_min_monitor_height () - rect.height - 30
+                    candidate_y = utils.get_min_monitor_height () - rect.height - 30
                     logging.debug ("modify candidate_y: %d" % candidate_y)
 
                 logging.debug ("x, y: (%d, %d)" % (candidate_x, candidate_y))
@@ -298,7 +286,7 @@ class Notification (gobject.GObject):
             arrow = ">>"
         cell.set_property ('text', arrow)
 
-    def refresh_reply_cb (self, data=None):
+    def view_refresh (self, data=None):
         self.refresh_current_status ()
         self.refresh_users_icon ()
         self.refresh_notification_comments ()
@@ -308,7 +296,7 @@ class Notification (gobject.GObject):
             self.comments[k].window.destroy ()
             del self.comments[k]
 
-        self.scrolledwindow.set_size_request (-1, self.get_min_monitor_height () / 3 * 2)
+        self.scrolledwindow.set_size_request (-1, utils.get_min_monitor_height () / 3 * 2)
 
     def refresh_error_cb (self, e):
         logging.debug (e)

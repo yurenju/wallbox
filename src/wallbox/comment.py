@@ -43,7 +43,6 @@ class Comment:
         self.office = dbus.Interface \
             (obj, "org.wallbox.PostOfficeInterface")
 
-
         liststore = self.builder.get_object ("liststore_comment")
         clist = self.office.get_comments_list (post_id)
         for id in clist:
@@ -115,7 +114,6 @@ class Comment:
             liststore = self.builder.get_object ("liststore_comment")
             liststore.append ([cgi.escape (entry.get_text()), 0, self.user['uid']])
             entry.set_text ("")
-
 
     def on_window_resize (self, widget, event, data=None):
         x = self.window.get_size ()[0]

@@ -80,3 +80,13 @@ def pickle_dump (post_office, path):
     pickle.dump (cache, output)
     output.close ()
 
+def get_min_monitor_height ():
+    min_height = 4096
+    screen = gtk.gdk.screen_get_default ()
+    monitor_num = screen.get_n_monitors ()
+    for i in range (monitor_num):
+        rect = screen.get_monitor_geometry (i)
+        if rect.height < min_height:
+            min_height = rect.height
+
+    return min_height

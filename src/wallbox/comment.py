@@ -12,7 +12,7 @@ import defs
 import logging
 import utils
 import gobject
-from HTMLParser import HTMLParser
+import cgi
 
 COMMENT_ICON_SIZE = 30
 MAIN_ICON_SIZE = 50
@@ -23,7 +23,6 @@ STATUS_WIDTH = \
 class Comment:
     def __init__ (self, post_id):
         logging.basicConfig (level=defs.log_level)
-        self.html_parser = HTMLParser ()
         self.post_id = post_id
         self.builder = gtk.Builder ()
 
@@ -49,8 +48,9 @@ class Comment:
         clist = self.office.get_comments_list (post_id)
         for id in clist:
             comment = self.office.get_comment_entry (post_id, id)
+            logging.info ("comment text: %s" % comment['text'])
             liststore.append \
-                ([self.html_parser.unescape (comment['text']), int (comment['time']), \
+                ([cgi.escape (comment['text']), int (comment['time']), \
                 str (comment['fromid'])])
 
         self.status = self.office.get_status (post_id)
@@ -113,7 +113,7 @@ class Comment:
         if entry != None and len (entry.get_text ()) > 0:
             self.office.post_comment (self.post_id, entry.get_text ())
             liststore = self.builder.get_object ("liststore_comment")
-            liststore.append ([self.html_parser.unescape (entry.get_text()), 0, self.user['uid']])
+            liststore.append ([cgi.escape (entry.get_text()), 0, self.user['uid']])
             entry.set_text ("")
 
 
@@ -167,7 +167,7 @@ class Comment:
         cell.set_property ('pixbuf', scaled_buf)
 
     def make_text (self, column, cell, model, iter):
-        cell.set_property ('text', self.html_parser.unescape (model.get_value (iter, 0)))
+        cell.set_property ('text', cgi.escape (model.get_value (iter, 0)))
 
 if __name__ == "__main__":
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)

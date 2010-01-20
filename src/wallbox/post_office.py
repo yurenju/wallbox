@@ -89,7 +89,6 @@ class RefreshProcess (threading.Thread):
                 logging.debug ("\t%s: %s" % (c['id'], c['text']))
 
     def _dump_status (self):
-        logging.debug ("=== START === dump status")
         for skey in self.status:
             if self.status[skey].has_key ('message'):
                 logging.debug ("status: %s" % self.status[skey]['message'])
@@ -103,7 +102,6 @@ class RefreshProcess (threading.Thread):
             for n in self.status[skey]['notification_ids']:
                 nids_log += "%s, " % n
             logging.debug (nids_log)
-        logging.debug ("\n=== END === dump status")
 
     def _query (self, query_str):
         for i in range (3):
@@ -144,10 +142,32 @@ class RefreshProcess (threading.Thread):
         self._dump_notification ()
         self.refresh_status["notification"] = True
 
+    def slow_get_streams (self, pattern_id, matched_ns):
+        total_result = []
+        logging.debug ("fast get stream failed, try slow get stream")
+        for n in matched_ns:
+            m_id = pattern_id.search (n['href'])
+            if m_id != None:
+                uid = m_id.group (1)
+                logging.debug ("try href: %s" % n['href'])
+                for i in range (1, 4):
+                    qstr = "SELECT source_id, post_id, message, permalink FROM stream WHERE " + \
+                            "source_id = %s AND permalink = '%s' LIMIT %d" % (uid, n['href'], 10**i)
+                    logging.debug (qstr)
+                    result = self._query (qstr)
+                    logging.debug (result)
+                    if len (result) > 0:
+                        total_result.append (result[0])
+                        break
+                        
+        return total_result
+
     def get_remote_comments (self):
         logging.info ("get remote comments (fast)")
-        pattern_id = re.compile ("&id=(\d+)")
         new_status = {}
+        post_ids = []
+        subquery = []
+        pattern_id = re.compile ("&id=(\d+)")
 
         matched_ns = [n for n in self.notification \
             if int (n['app_id']) == 19675640871 or int (n['app_id']) == 2309869772]
@@ -155,11 +175,8 @@ class RefreshProcess (threading.Thread):
         if len (matched_ns) == 0:
             return
 
-        post_ids = []
-        subquery = []
         for n in matched_ns:
             m_id = pattern_id.search (n['href'])
-
             if m_id != None:
                 uid = m_id.group (1)
                 _str = "(source_id = %s AND permalink = '%s')" % (uid, n['href'])
@@ -173,31 +190,15 @@ class RefreshProcess (threading.Thread):
         result = self._query (qstr)
 
         if len (result) < len (subquery):
-            total_result = []
-            logging.debug ("fast get stream failed, try slow get stream")
-            for n in matched_ns:
-                m_id = pattern_id.search (n['href'])
+            result = self.slow_get_streams (pattern_id, matched_ns)
 
-                if m_id != None:
-                    uid = m_id.group (1)
-                    logging.debug ("try href: %s" % n['href'])
-                    for i in range (1, 4):
-                        qstr = "SELECT source_id, post_id, message, permalink " + \
-                                "FROM stream WHERE source_id = %s AND permalink = '%s' LIMIT %d" % (uid, n['href'], 10**i)
-                        logging.debug (qstr)
-                        result = self._query (qstr)
-                        logging.debug (result)
-                        if len (result) > 0:
-                            total_result.append (result[0])
-                            break
-                            
-            result = total_result
-
+        # Relating notification and status
         for r in result:
             new_status[r['post_id']] = r
             nids = [n['notification_id'] for n in matched_ns if n['href'] == r['permalink']]
             new_status[r['post_id']]['notification_ids'] = nids
         
+        # get comments
         post_ids = ["'%s'" % r['post_id'] for r in result]
         substr = ", ".join (post_ids)
         qstr = "SELECT fromid, text, post_id, id, time FROM comment WHERE post_id IN (%s)" % substr
@@ -238,9 +239,9 @@ class RefreshProcess (threading.Thread):
         remote_size = int (info.get ("Content-Length"))
         remote_icon.close ()
 
-
         if remote_size != local_size or not os.path.exists (full_path):
-            logging.debug ("size different remote/local: %d/%d, start dwonload icon" % (remote_size, local_size))
+            logging.debug ("size different remote/local: %d/%d, start dwonload icon" % \
+                            (remote_size, local_size))
             try:
                 urllib.urlretrieve (url, full_path)
                 return icon_name
@@ -276,7 +277,8 @@ class RefreshProcess (threading.Thread):
                 if timeout_count < 3:
                     try:
                         u['pic_square_local'] = \
-                            self.get_remote_icon (u['pic_square'], self.user_icons_dir)
+                            self.get_remote_icon \
+                            (u['pic_square'], self.user_icons_dir)
                     except TimeoutError:
                         timeout_count += 1
                         logging.debug ("timeout")
@@ -314,7 +316,8 @@ class RefreshProcess (threading.Thread):
         for app in apps:
             if timeout_count < 3:
                 try:
-                    icon_name = self.get_remote_icon (app['icon_url'], self.app_icons_dir)
+                    icon_name = self.get_remote_icon \
+                        (app['icon_url'], self.app_icons_dir)
                 except TimeoutError:
                     logging.debug ("timeout")
                     timeout_count += 1
@@ -374,6 +377,7 @@ class PostOffice (dbus.service.Object):
         self.updated_timestamp = None
         self.notification_num = 10 
         self.refresh_interval = 60
+        self.refresh_hanedler = None
         self.notification = []
         self.session = None
         self.session_code = None
@@ -405,12 +409,9 @@ class PostOffice (dbus.service.Object):
             if self.uid not in self.user_ids:
                 self.user_ids.append (self.uid)
 
-            gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
+            self.refresh_hanedler = gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
         else:
             self.status_changed (defs.NO_LOGIN)
-
-        gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
-
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='')
     def set_session_code (self, session_code):
@@ -453,7 +454,7 @@ class PostOffice (dbus.service.Object):
             self.user_ids.append (self.uid)
         self.status_changed (defs.IS_LOGIN)
 
-        gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
+        self.refresh_hanedler = gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='')
     def get_ext_perm (self):
@@ -471,7 +472,7 @@ class PostOffice (dbus.service.Object):
         self.user_ids.append (self.uid)
         self.status_changed (defs.IS_LOGIN)
 
-        gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
+        self.refresh_hanedler = gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='a{sv}')
     def get_session (self):
@@ -481,9 +482,7 @@ class PostOffice (dbus.service.Object):
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='ai')
     def get_notification_list (self):
-        nlist = []
-        for n in self.notification:
-            nlist.append (int (n['notification_id']))
+        nlist = [int (n['notification_id']) for n in self.notification]
         return nlist
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='i', out_signature='a{sv}')
@@ -506,16 +505,15 @@ class PostOffice (dbus.service.Object):
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='i', out_signature='')
     def set_refresh_interval (self, interval):
         self.refresh_interval = interval
+        if self.refresh_hanedler != None:
+            gobject.source_remove (self.refresh_hanedler)
+            self.refresh_hanedler = gobject.timeout_add (self.refresh_interval * 1000, self._refresh)
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='as')
     def get_comments_list (self, post_id):
-        clist = []
+        clist = [c['id'] for c in self.status[post_id]['comments']]
         for s in self.status:
             logging.debug ("post_id: %s" % s)
-        for c in self.status[post_id]['comments']:
-            clist.append (c['id'])
-            logging.debug ("\t%s" % c['id'])
-        print
         return clist
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='ss', out_signature='a{sv}')
@@ -685,13 +683,10 @@ class PostOffice (dbus.service.Object):
     def prepare_directories (self):
         self.local_data_dir = \
             "%s/.local/share/wallbox" % os.getenv ("HOME")
-
         self.user_icons_dir = \
             "%s/user_icons" % self.local_data_dir
-
         self.app_icons_dir = \
             "%s/app_icons" % self.local_data_dir
-
         for d in [self.user_icons_dir, self.app_icons_dir]:
             if not os.path.exists (d):
                 os.makedirs (d)

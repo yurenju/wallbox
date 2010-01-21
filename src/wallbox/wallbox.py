@@ -19,22 +19,32 @@ import logging
 
 logging.basicConfig (level=defs.log_level)
 
-def read_all_reply_handler (reply=None):
+def reply_handler (reply=None):
     pass
 
-def read_all_error_handler (error=None):
+def error_handler (error=None):
     pass
 
 class wallbox:
     config_parser = None
 
     def __init__ (self):
+        self.status_icon = None
         bus = dbus.SessionBus ()
         obj = bus.get_object ("org.wallbox.PostOfficeService", \
             "/org/wallbox/PostOfficeObject")
 
         self.office = dbus.Interface \
             (obj, "org.wallbox.PostOfficeInterface")
+
+        self.builder = gtk.Builder ()
+        ui_file = pkg_resources.resource_filename \
+                    (__name__, "data/wallbox.ui")
+        self.builder.add_from_file (ui_file)
+        self.menu = self.builder.get_object ("menu")
+        self.about = self.builder.get_object ("aboutdialog")
+        self.setting = self.builder.get_object ("dialog_setting")
+        self.builder.connect_signals (self, None)
 
         status = self.office.get_office_status ()
         if status == defs.NO_LOGIN:
@@ -51,6 +61,7 @@ class wallbox:
 
     def setup_configuration (self):
         config_dir = os.path.expanduser ("~/.config")
+        self.config_dir = config_dir
         if not os.path.exists (config_dir):
             os.mkdir (config_dir)
 
@@ -78,20 +89,75 @@ class wallbox:
         self.config_parser.write (configfile)
 
     def make_ui (self):
+        if self.status_icon != None:
+            self.status_icon.set_visible (False)
+            
         status_icon = gtk.status_icon_new_from_stock (gtk.STOCK_OPEN)
-        n = notification.Notification ()
+        self.notification = notification.Notification ()
         self.status_icon = status_icon
-        status_icon.connect ("activate", self.show_notification, n)
-        n.connect ("has-unread", self.has_unread)
+        status_icon.connect ("activate", self.show_notification, self.notification)
+        status_icon.connect ("popup-menu", self.on_right_click)
+        self.notification.connect ("has-unread", self.has_unread)
 
     def has_unread (self, data=None):
         logging.debug ("has_unread")
         self.status_icon.set_blinking (True)
 
+    def on_right_click (self, widget, event_button, event_time):
+        self.menu.popup (None, None, gtk.status_icon_position_menu, \
+                        event_button, event_time, self.status_icon)
+
+    def on_item_setting_activate (self, item, data=None):
+        entry_notification = self.builder.get_object ("entry_notification")
+        entry_refresh_interval = self.builder.get_object ("entry_refresh_interval")
+        entry_notification.set_text (str (self.notification_num))
+        entry_refresh_interval.set_text (str (self.refresh_interval))
+        response = self.setting.run ()
+        self.setting.hide ()
+        if response == 1:
+            try:
+                notification_num = int (entry_notification.get_text ())
+            except:
+                notification_num = 10
+
+            try:
+                refresh_interval = int (entry_refresh_interval.get_text ())
+            except:
+                refresh_interval = 60
+
+            self.config_parser.set ("general", "notification_num", notification_num)
+            self.config_parser.set ("general", "refresh_interval", refresh_interval)
+            self.notification_num = notification_num
+            self.refresh_interval = refresh_interval
+            self.office.set_notification_num (notification_num)
+            self.office.set_refresh_interval (refresh_interval)
+            configfile = open (self.config_dir + "/wallbox.conf", 'wb')
+            self.config_parser.write (configfile)
+    
+    def on_item_login_activate (self, item, data=None):
+        if self.notification.window.get_property ("visible"):
+            self.notification.window.hide ()
+            for k in self.notification.comments:
+                self.notification.comments[k].window.hide ()
+        self.wizard = wizard.Wizard ()
+        self.wizard.assistant.connect ("apply", self.wizard_finish, None)
+
+    def on_item_about_activate (self, item, data=None):
+        response = self.about.run ()
+        if response == gtk.RESPONSE_DELETE_EVENT or response == gtk.RESPONSE_CANCEL:
+            self.about.hide ()
+
+    def on_item_quit_activate (self, item, data=None):
+        self.office.kill (reply_handler=reply_handler, error_handler=error_handler)
+        gtk.main_quit ()
+
+    def on_item_show_notification_activate (self, item, data=None):
+        self.show_notification (self.status_icon, self.notification)
+
     def show_notification (self, icon, n):
         self.status_icon.set_blinking (False)
         self.office.notification_mark_all_read \
-            (reply_handler=read_all_reply_handler, error_handler=read_all_error_handler)
+            (reply_handler=reply_handler, error_handler=error_handler)
 
         if n.window.get_property ("visible"):
             n.window.hide ()
@@ -108,12 +174,17 @@ def run_post_office ():
     try:
         obj = bus.get_object ("org.wallbox.PostOfficeService", \
             "/org/wallbox/PostOfficeObject")
+        office = dbus.Interface \
+            (obj, "org.wallbox.PostOfficeInterface")
+        office.kill ()
+        time.sleep (0.5)
     except:
         logging.info ("execute post_office.py")
-        office = pkg_resources.resource_filename \
-                    (__name__, "post_office.py")
-        Popen (["python %s" % office], shell=True)
-        time.sleep (1)
+
+    office = pkg_resources.resource_filename \
+                (__name__, "post_office.py")
+    Popen (["python %s" % office], shell=True)
+    time.sleep (1)
         
 def run_wallbox ():
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)

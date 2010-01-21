@@ -19,6 +19,7 @@ import defs
 import logging
 import utils
 import pickle
+import sys
 
 __author__ = 'Yuren Ju <yurenju@gmail.com>'
 
@@ -670,6 +671,10 @@ class PostOffice (dbus.service.Object):
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='s')
     def get_user_icons_dir (self):
         return self.user_icons_dir
+
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='')
+    def kill (self):
+        sys.exit (0)
 
     @dbus.service.signal ("org.wallbox.PostOfficeInterface", signature='i')
     def status_changed (self, status):

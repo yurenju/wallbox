@@ -1,0 +1,183 @@
+<?xml version="1.0"?>
+<interface>
+  <requires lib="gtk+" version="2.16"/>
+  <!-- interface-naming-policy project-wide -->
+  <object class="GtkMenu" id="menu">
+    <property name="visible">True</property>
+    <child>
+      <object class="GtkMenuItem" id="item_show_notification">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes">Show notification</property>
+        <property name="use_underline">True</property>
+        <signal name="activate" handler="on_item_show_notification_activate"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="item_setting">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes">Setting</property>
+        <property name="use_underline">True</property>
+        <signal name="activate" handler="on_item_setting_activate"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="item_login">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes">Login again</property>
+        <property name="use_underline">True</property>
+        <signal name="activate" handler="on_item_login_activate"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="item_about">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes">About</property>
+        <property name="use_underline">True</property>
+        <signal name="activate" handler="on_item_about_activate"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="item_quit">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes">Quit</property>
+        <property name="use_underline">True</property>
+        <signal name="activate" handler="on_item_quit_activate"/>
+      </object>
+    </child>
+  </object>
+  <object class="GtkAboutDialog" id="aboutdialog">
+    <property name="border_width">5</property>
+    <property name="type_hint">normal</property>
+    <property name="has_separator">False</property>
+    <property name="program_name">Wallbox</property>
+    <property name="comments" translatable="yes">Facebook notification for Linux</property>
+    <property name="website">http://github.com/yurenju/wallbox</property>
+    <property name="authors">Yuren Ju &lt;yurenju@gmail.com&gt;	</property>
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="dialog-vbox1">
+        <property name="visible">True</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child>
+          <placeholder/>
+        </child>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog-action_area1">
+            <property name="visible">True</property>
+            <property name="layout_style">end</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkDialog" id="dialog_setting">
+    <property name="border_width">5</property>
+    <property name="type_hint">normal</property>
+    <property name="has_separator">False</property>
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="dialog-vbox2">
+        <property name="visible">True</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child>
+          <object class="GtkTable" id="table1">
+            <property name="visible">True</property>
+            <property name="n_rows">2</property>
+            <property name="n_columns">2</property>
+            <child>
+              <object class="GtkLabel" id="label_notification">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">notification numbers: </property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label_refresh_interval">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">refresh interval (sec):</property>
+              </object>
+              <packing>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="entry_notification">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="invisible_char">&#x25CF;</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="entry_refresh_interval">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="invisible_char">&#x25CF;</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog-action_area2">
+            <property name="visible">True</property>
+            <property name="layout_style">end</property>
+            <child>
+              <object class="GtkButton" id="button_cancel">
+                <property name="label">gtk-cancel</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_stock">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="button_apply">
+                <property name="label">gtk-apply</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_stock">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="0">button_cancel</action-widget>
+      <action-widget response="1">button_apply</action-widget>
+    </action-widgets>
+  </object>
+</interface>

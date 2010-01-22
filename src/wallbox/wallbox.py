@@ -30,6 +30,8 @@ class wallbox:
 
     def __init__ (self):
         self.status_icon = None
+        self.activate_id = None
+        self.popup_id = None
         bus = dbus.SessionBus ()
         obj = bus.get_object ("org.wallbox.PostOfficeService", \
             "/org/wallbox/PostOfficeObject")
@@ -91,16 +93,38 @@ class wallbox:
     def make_ui (self):
         if self.status_icon != None:
             self.status_icon.set_visible (False)
-            
-        status_icon = gtk.status_icon_new_from_stock (gtk.STOCK_OPEN)
-        self.notification = notification.Notification ()
-        self.status_icon = status_icon
-        status_icon.connect ("activate", self.show_notification, self.notification)
-        status_icon.connect ("popup-menu", self.on_right_click)
-        self.notification.connect ("has-unread", self.has_unread)
 
-    def has_unread (self, data=None):
-        logging.debug ("has_unread")
+        self.notification = notification.Notification ()
+        self.notification.connect ("has-unread", self.has_unread)
+        self.init_status_icon ()
+
+    def init_status_icon (self):
+        self.status_icons = {}
+        icon_ids = [str(i) for i in range (1, 9)]
+        icon_ids.append ("p")
+        for num in icon_ids:
+            icon_file = pkg_resources.resource_filename \
+                        (__name__, "/data/images/wallbox_%s.png" % str (num))
+            self.status_icons[str (num)] = gtk.status_icon_new_from_file (icon_file)
+            self.status_icons[str (num)].set_visible (False)
+            self.status_icons[str (num)].connect ("activate", self.show_notification, self.notification)
+            self.status_icons[str (num)].connect ("popup-menu", self.on_right_click)
+
+        icon_file = pkg_resources.resource_filename \
+                    (__name__, "/data/images/wallbox.png")
+        self.status_icons["normal"] = gtk.status_icon_new_from_file (icon_file)
+        self.status_icon = self.status_icons["normal"]
+        self.status_icon.connect ("activate", self.show_notification, self.notification)
+        self.status_icon.connect ("popup-menu", self.on_right_click)
+
+    def has_unread (self, notification, unread_num):
+        self.status_icon.set_visible (False)
+        if unread_num < 10:
+            self.status_icon = self.status_icons[str (unread_num)]
+        else:
+            self.status_icon = self.status_icons["p"]
+
+        self.status_icon.set_visible (True)
         self.status_icon.set_blinking (True)
 
     def on_right_click (self, widget, event_button, event_time):
@@ -168,6 +192,11 @@ class wallbox:
             n.window.move (rect.x, rect.y+10)
             n.window.show ()
             n.entry_status.grab_focus ()
+
+        if self.status_icon != self.status_icons["normal"]:
+            self.status_icon.set_visible (False)
+            self.status_icon = self.status_icons["normal"]
+            self.status_icon.set_visible (True)
 
 def run_post_office ():
     bus = dbus.SessionBus ()

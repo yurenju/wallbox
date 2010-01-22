@@ -40,7 +40,7 @@ class Notification (gobject.GObject):
 
         gobject.signal_new \
             ("has-unread", Notification, gobject.SIGNAL_RUN_LAST, \
-            gobject.TYPE_NONE, ())
+            gobject.TYPE_NONE, (gobject.TYPE_INT,))
 
         bus = dbus.SessionBus ()
         obj = bus.get_object ("org.wallbox.PostOfficeService", \
@@ -87,6 +87,7 @@ class Notification (gobject.GObject):
         liststore = self.builder.get_object ("list_notification")
         liststore.clear ()
         has_unread = False
+        unread_num = 0
         for nid in nlist:
             entry = self.office.get_notification_entry (nid)
             text = None
@@ -102,6 +103,7 @@ class Notification (gobject.GObject):
             if entry['is_unread'] == True:
                 has_unread = True
                 text = "<b>%s</b>" % text
+                unread_num += 1
 
             status = self.office.get_status_with_nid (int (entry['notification_id']))
             if len (status) != 0:
@@ -110,7 +112,7 @@ class Notification (gobject.GObject):
                 ([entry['app_id'], text, has_detail, int(entry['notification_id'])])
 
         if has_unread == True:
-            self.emit ("has-unread")
+            self.emit ("has-unread", unread_num)
 
     def refresh_users_icon (self):
         user = self.office.get_current_user ()

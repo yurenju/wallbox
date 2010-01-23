@@ -24,6 +24,7 @@ import sys
 __author__ = 'Yuren Ju <yurenju@gmail.com>'
 
 GET_ICON_TIMEOUT = 3
+QUERY_TIMEOUT = 5
 
 gtk.gdk.threads_init()
 logging.basicConfig (level=defs.log_level)
@@ -105,6 +106,9 @@ class RefreshProcess (threading.Thread):
             logging.debug (nids_log)
 
     def _query (self, query_str):
+	logging.debug ("_query: %s" % query_str)
+        default_timeout = socket.getdefaulttimeout ()
+        socket.setdefaulttimeout (QUERY_TIMEOUT)
         for i in range (3):
             try:
                 result = self.fb.fql.query (query_str)
@@ -114,6 +118,7 @@ class RefreshProcess (threading.Thread):
                 logging.debug ("URLError, Sleep 3 sec")
                 time.sleep (3)
         return None
+        socket.setdefaulttimeout (default_timeout)
             
     def get_remote_current_status (self):
         logging.info ("get remote current status")
@@ -187,7 +192,6 @@ class RefreshProcess (threading.Thread):
         substr = " OR ".join (subquery)
         qstr = "SELECT source_id, post_id, message, permalink FROM stream " + \
             "WHERE %s" % substr
-        logging.debug ("status query: " + qstr)
         result = self._query (qstr)
 
         if len (result) < len (subquery):
@@ -307,8 +311,7 @@ class RefreshProcess (threading.Thread):
 
         ids_str = ", ".join (self.app_ids)
         qstr = "SELECT icon_url, app_id FROM application WHERE app_id IN (%s)" % ids_str
-        logging.debug ("qstr: %s" % qstr)
-        apps = self.fb.fql.query (qstr)
+        apps = self._query (qstr)
 
         default_timeout = socket.getdefaulttimeout ()
         socket.setdefaulttimeout (GET_ICON_TIMEOUT)

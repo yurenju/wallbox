@@ -48,6 +48,13 @@ class NoUpdateError(Exception):
     def __str__ (self):
         return repr (self.value)
 
+class RefreshError(Exception):
+    def __init__ (self, value):
+        self.value = value
+    def __str__ (self):
+        return repr (self.value)
+
+
 class RefreshProcess (threading.Thread):
     def __init__ (self, notification_num, fb, uid, user_icons_dir, app_icons_dir, user_ids, last_nid):
         threading.Thread.__init__ (self)
@@ -113,12 +120,13 @@ class RefreshProcess (threading.Thread):
             try:
                 result = self.fb.fql.query (query_str)
                 if result != None:
+                    socket.setdefaulttimeout (default_timeout)
                     return result
             except:
                 logging.debug ("URLError, Sleep 3 sec")
                 time.sleep (3)
-        return None
         socket.setdefaulttimeout (default_timeout)
+        return None
             
     def get_remote_current_status (self):
         logging.info ("get remote current status")

@@ -349,9 +349,9 @@ class RefreshProcess (threading.Thread):
         qstr = "SELECT notification_id FROM notification " + \
                 "WHERE recipient_id = %d LIMIT 1" % int (self.uid)
         result = self._query (qstr)
-        logging.debug ("get last nid: %d" % int (result[0]['notification_id']))
-        logging.debug ("orignal nid: %d" % int (self.last_nid))
         if len (result) > 0:
+            logging.debug ("get last nid: %d" % int (result[0]['notification_id']))
+            logging.debug ("orignal nid: %d" % int (self.last_nid))
             return result[0]['notification_id']
         else:
             return 0

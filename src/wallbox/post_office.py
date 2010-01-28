@@ -134,7 +134,10 @@ class RefreshProcess (threading.Thread):
                 "source FROM status WHERE uid='%s' LIMIT 1" % self.uid
         status = self._query (qstr)
 
-        self.current_status = status[0]
+        if status != None and len (status) > 0:
+            self.current_status = status[0]
+        else:
+            self.current_status = None
         self.refresh_status["current_status"] = True
 
     def _filter_none (self, items):
@@ -349,7 +352,7 @@ class RefreshProcess (threading.Thread):
         qstr = "SELECT notification_id FROM notification " + \
                 "WHERE recipient_id = %d LIMIT 1" % int (self.uid)
         result = self._query (qstr)
-        if len (result) > 0:
+        if result != None and len (result) > 0:
             logging.debug ("get last nid: %d" % int (result[0]['notification_id']))
             logging.debug ("orignal nid: %d" % int (self.last_nid))
             return result[0]['notification_id']

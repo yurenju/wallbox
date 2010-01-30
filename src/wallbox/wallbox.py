@@ -16,6 +16,7 @@ import pkg_resources
 import time
 import defs
 import logging
+import utils
 
 logging.basicConfig (level=defs.log_level)
 
@@ -189,7 +190,8 @@ class wallbox:
                 n.comments[k].window.hide ()
         else:
             (screen, rect, orientation) = icon.get_geometry ()
-            n.window.move (rect.x, rect.y+10)
+            (x, y) = utils.suggest_window_position (n.window, rect.x, rect.y+10)
+            n.window.move (x, y)
             n.window.show ()
             n.entry_status.grab_focus ()
 

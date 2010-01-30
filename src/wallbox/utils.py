@@ -90,3 +90,27 @@ def get_min_monitor_height ():
             min_height = rect.height
 
     return min_height
+
+def suggest_window_position (window, x, y):
+    xs = x
+    ys = y
+    screen = gtk.gdk.screen_get_default ()
+    mon_num = screen.get_monitor_at_point (x, y)
+    monitor_rect = screen.get_monitor_geometry (mon_num)
+    x_left = monitor_rect.x
+    x_right = monitor_rect.x + monitor_rect.width
+    y_top = monitor_rect.y
+    y_bottom = monitor_rect.y + monitor_rect.height
+    win_rect = window.get_allocation ()
+
+    if x + win_rect.width >= x_right:
+        xs = x_right - win_rect.width
+    if x + win_rect.width <= x_left:
+        xs = x_left
+    if y + win_rect.height >= y_bottom:
+        ys = y_bottom - win_rect.height
+    if y + win_rect.height <= y_top:
+        ys = y_top
+
+    return (xs, ys)
+    

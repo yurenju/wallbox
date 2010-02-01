@@ -516,6 +516,7 @@ class PostOffice (dbus.service.Object):
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='i', out_signature='')
     def set_notification_num (self, num):
         self.notification_num = num
+        self.last_nid = 0
 
     @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='i', out_signature='')
     def set_refresh_interval (self, interval):

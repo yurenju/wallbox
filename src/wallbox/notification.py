@@ -203,6 +203,7 @@ class Notification (gobject.GObject):
                 logging.debug ("status: %s" % status['message'])
                 if not self.comments.has_key (status['post_id']):
                     self.comments[status['post_id']] = comment.Comment (status['post_id'])
+                    self.comments[status['post_id']].window.set_transient_for (self.window)
 
                 rect = self.comments[status['post_id']].window.get_allocation ()
                 if candidate_y + rect.height > utils.get_min_monitor_height () - 30 :

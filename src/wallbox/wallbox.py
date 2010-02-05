@@ -194,6 +194,7 @@ class wallbox:
             (x, y) = utils.suggest_window_position (n.window, rect.x, rect.y+10)
             n.window.move (x, y)
             n.entry_status.grab_focus ()
+            n.window.set_keep_above (True)
 
         if self.status_icon != self.status_icons["normal"]:
             self.status_icon.set_visible (False)

@@ -112,5 +112,9 @@ def suggest_window_position (window, x, y):
     if y + win_rect.height <= y_top:
         ys = y_top
 
+    if ys > (y_bottom + y_top) / 2:
+        ys += 20
+    else:
+        ys -= 20
     return (xs, ys)
     

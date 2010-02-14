@@ -56,6 +56,15 @@ AC_DEFINE(GETTEXT_PACKAGE, ["wallbox"], [Package name for gettext])
 desktopentrydir=${datadir}/applications
 AC_SUBST(desktopentrydir)
 
+AS_AC_EXPAND(DATADIR, $datarootdir)
+AC_SUBST(DATADIR)
+
+AS_AC_EXPAND(PYEXECDIR, $pyexecdir)
+AC_SUBST(PYEXECDIR)
+
+AS_AC_EXPAND(LIBDIR, $libdir)
+AC_SUBST(LIBDIR)
+
 icondir=${datadir}/icons/hicolor/32x32/apps
 AC_SUBST(icondir)
 
@@ -63,6 +72,7 @@ AC_SUBST(icondir)
 AC_OUTPUT([Makefile
 src/Makefile
 src/wallbox/Makefile
+src/wallbox/defs.py
 data/Makefile
 data/wallbox.desktop
 ])

@@ -6,7 +6,6 @@ import gtk
 import dbus
 import dbus.mainloop.glib
 import sys
-import pkg_resources
 import pango
 import defs
 import logging
@@ -26,8 +25,7 @@ class Comment:
         self.post_id = post_id
         self.builder = gtk.Builder ()
 
-        ui_file = pkg_resources.resource_filename \
-                    (__name__, "data/comment.ui")
+        ui_file =  "%s/comment.ui" % defs.WALLBOX_DATA_DIR
 
         self.builder.add_from_file (ui_file)
         self.builder.connect_signals (self, None)
@@ -62,8 +60,7 @@ class Comment:
         user_icons_dir = self.office.get_user_icons_dir ()
 
         if not user.has_key ("pic_square_local"):
-            img_file = pkg_resources.resource_filename \
-                        (__name__, "data/images/q_silhouette.gif")
+            img_file = "%s/images/q_silhouette.gif" % defs.WALLBOX_DATA_DIR
         else:
             img_file = "%s/%s" % (user_icons_dir, user['pic_square_local'])
 
@@ -75,16 +72,14 @@ class Comment:
             icon_path = "%s/%s" % \
                 (user_icons_dir, current_user['pic_square_local'])
         else:
-            icon_path = pkg_resources.resource_filename \
-                        (__name__, "data/images/q_silhouette.gif")
+            icon_path =  "%s/images/q_silhouette.gif" % defs.WALLBOX_DATA_DIR
             
         pixbuf = None
         try:
             pixbuf = gtk.image_new_from_file (icon_path).get_pixbuf ()
         except:
             logging.debug ("no icon: comment.py:59 [%s]" % icon_path)
-            img_file = pkg_resources.resource_filename \
-                        (__name__, "data/images/q_silhouette.gif")
+            img_file =  "%s/images/q_silhouette.gif" % defs.WALLBOX_DATA_DIR
             icon = gtk.image_new_from_file (img_file)
             pixbuf = icon.get_pixbuf ()
             
@@ -146,16 +141,14 @@ class Comment:
             icon_path = "%s/%s" % (icons_dir, user['pic_square_local'])
             icon = gtk.image_new_from_file (icon_path)
         else:
-            img_file = pkg_resources.resource_filename \
-                        (__name__, "data/images/q_silhouette.gif")
+            img_file =  "%s/images/q_silhouette.gif" % defs.WALLBOX_DATA_DIR
             icon = gtk.image_new_from_file (img_file)
 
         try:
             pixbuf = icon.get_pixbuf ()
         except:
             logging.debug ("no icon: comment.py:116 [%s]" % icon_path)
-            img_file = pkg_resources.resource_filename \
-                        (__name__, "data/images/q_silhouette.gif")
+            img_file =  "%s/images/q_silhouette.gif" % defs.WALLBOX_DATA_DIR
             icon = gtk.image_new_from_file (img_file)
             pixbuf = icon.get_pixbuf ()
 

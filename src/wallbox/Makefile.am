@@ -1,9 +1,11 @@
-python_PYTHON = __init__.py \
+python_PYTHON = \
+    __init__.py \
 	comment.py \
     defs.py \
     notification.py \
     secert.py \
     utils.py \
     wallbox.py \
-    wizard.py
+    wizard.py \
+    post_office.py
 

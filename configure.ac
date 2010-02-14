@@ -74,6 +74,7 @@ src/Makefile
 src/wallbox/Makefile
 src/wallbox/defs.py
 data/Makefile
+data/images/Makefile
 data/wallbox.desktop
 ])
 

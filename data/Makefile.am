@@ -1,3 +1,5 @@
+SUBDIRS = images
+
 desktopentry_DATA = wallbox.desktop
 icon_DATA = wallbox32.png
 

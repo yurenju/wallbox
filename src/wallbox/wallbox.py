@@ -12,7 +12,6 @@ import os
 import os.path
 import ConfigParser
 from subprocess import Popen, PIPE
-import pkg_resources
 import time
 import defs
 import logging
@@ -41,8 +40,7 @@ class wallbox:
             (obj, "org.wallbox.PostOfficeInterface")
 
         self.builder = gtk.Builder ()
-        ui_file = pkg_resources.resource_filename \
-                    (__name__, "data/wallbox.ui")
+        ui_file =  "%s/wallbox.ui" % defs.WALLBOX_DATA_DIR
         self.builder.add_from_file (ui_file)
         self.menu = self.builder.get_object ("menu")
         self.about = self.builder.get_object ("aboutdialog")
@@ -104,15 +102,13 @@ class wallbox:
         icon_ids = [str(i) for i in range (1, 9)]
         icon_ids.append ("p")
         for num in icon_ids:
-            icon_file = pkg_resources.resource_filename \
-                        (__name__, "/data/images/wallbox_%s.png" % str (num))
+            icon_file =  "%s/images/wallbox_%s.png" % (defs.WALLBOX_DATA_DIR, str (num))
             self.status_icons[str (num)] = gtk.status_icon_new_from_file (icon_file)
             self.status_icons[str (num)].set_visible (False)
             self.status_icons[str (num)].connect ("activate", self.show_notification, self.notification)
             self.status_icons[str (num)].connect ("popup-menu", self.on_right_click)
 
-        icon_file = pkg_resources.resource_filename \
-                    (__name__, "/data/images/wallbox.png")
+        icon_file = "%s/images/wallbox.png" % defs.WALLBOX_DATA_DIR
         self.status_icons["normal"] = gtk.status_icon_new_from_file (icon_file)
         self.status_icon = self.status_icons["normal"]
         self.status_icon.connect ("activate", self.show_notification, self.notification)
@@ -213,8 +209,7 @@ def run_post_office ():
     except:
         logging.info ("execute post_office.py")
 
-    office = pkg_resources.resource_filename \
-                (__name__, "post_office.py")
+    office =  "%s/post_office.py" % defs.PYTHONDIR
     Popen (["python %s" % office], shell=True)
     time.sleep (1)
         

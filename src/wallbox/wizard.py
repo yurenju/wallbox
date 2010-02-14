@@ -4,13 +4,11 @@ import pygtk
 pygtk.require ("2.0")
 import gtk
 import dbus
-import pkg_resources
 
 class Wizard:
     def __init__ (self):
         self.builder = gtk.Builder ()
-        ui_file = pkg_resources.resource_filename \
-                    (__name__, "data/wizard.ui")
+        ui_file = "%s/wizard.ui" % defs.WALLBOX_DATA_DIR
 
         self.builder.add_from_file (ui_file)
         self.assistant = self.builder.get_object ("wizard_welcome")

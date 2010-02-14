@@ -62,7 +62,9 @@ AC_SUBST(icondir)
 # Output files
 AC_OUTPUT([Makefile
 src/Makefile
-src/wallbox.desktop
+src/wallbox/Makefile
+data/Makefile
+data/wallbox.desktop
 ])
 
 echo ""

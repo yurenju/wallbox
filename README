@@ -1,31 +1,27 @@
 wallbox v0.1
+Copyright (C) 2010, Yuren Ju.
 
-WARNING: this project only has pre-alpha quality.
-design document:
-
-http://docs.google.com/View?id=ajd93zkqrjq5_342cqdrxqcd
+Brief description of project....
 
 -----------------------------------------------------------------------------
- Prerequisites
+ Build
 -----------------------------------------------------------------------------
-
-In Ubuntu 9.04 (Karmic), python-facebook is too old.
-please install python-facebook 0.svn20090724-1.1 from lucid.
-
-http://packages.ubuntu.com/lucid/all/python-facebook/download
-
-In Debian Squeeze/Sid please install python-facebook:
-# apt-get install python-facebook
-
-In Arch Linux please install pyfacebook-git from AUR.
-$ yaourt -S pyfacebook-git
-
+$ ./autogen.sh
+$ make
 
 -----------------------------------------------------------------------------
- Run
+ Build with documentation generated (usually for libraries)
 -----------------------------------------------------------------------------
+$ ./autogen.sh --enable-gtk-doc
+$ make
 
-$ cd src/wallbox
-$ ./wallbox.py
+( If built with the --enable-gtk-doc flag above you can view the index.html
+  file in your web browser. )
+$ firefox ./docs/reference/index.html
+
+-----------------------------------------------------------------------------
+ Install
+-----------------------------------------------------------------------------
+$ sudo make install
 
 

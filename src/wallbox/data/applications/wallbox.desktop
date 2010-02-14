@@ -1,9 +1,0 @@
-[Desktop Entry]
-Encoding=UTF-8
-Name=Wallbox
-Comment=Facebook notification for Linux
-Icon=binary
-Exec=wallbox
-Terminal=false
-Type=Application
-Categories=Network;

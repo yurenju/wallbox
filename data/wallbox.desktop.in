@@ -1,0 +1,14 @@
+[Desktop Entry]
+Encoding=UTF-8
+Version=@VERSION@
+Name=wallbox
+Comment=facebook notification for linux
+Exec=wallbox
+Categories=Application
+Icon=wallbox32
+Type=Application
+Terminal=true
+URL=
+StartupNotify=true
+
+

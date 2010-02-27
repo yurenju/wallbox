@@ -1,5 +1,6 @@
 EXTRA_DIST = autogen.sh
 SUBDIRS = src data
+ACLOCAL_AMFLAGS = -I m4
 
 DISTCHECK_CONFIGURE_FLAGS=
 

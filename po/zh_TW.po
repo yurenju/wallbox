@@ -1,0 +1,129 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: wallbox 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-02-27 21:11+0800\n"
+"PO-Revision-Date: 2010-02-27 21:23+0800\n"
+"Last-Translator: Yuren Ju <yurenju@gmail.com>\n"
+"Language-Team: Yuren Ju <yurenju@gmail.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Chinese\n"
+"X-Poedit-Country: TAIWAN\n"
+"X-Poedit-SourceCharset: utf-8\n"
+
+#: ../data/comment.ui:44
+msgid "label"
+msgstr "標籤"
+
+#: ../data/comment.ui:108
+#: ../data/notification.ui:79
+msgid "Share"
+msgstr "分享"
+
+#: ../data/notification.ui:124
+msgid "refresh"
+msgstr "更新"
+
+#: ../data/wallbox.ui:10
+msgid "Show notification"
+msgstr "顯示通知"
+
+#: ../data/wallbox.ui:18
+msgid "Setting"
+msgstr "設定"
+
+#: ../data/wallbox.ui:26
+msgid "Login again"
+msgstr "再次登入"
+
+#: ../data/wallbox.ui:34
+msgid "About"
+msgstr "關於"
+
+#: ../data/wallbox.ui:42
+msgid "Quit"
+msgstr "離開"
+
+#: ../data/wallbox.ui:53
+msgid "Facebook notification for Linux"
+msgstr "Linux 的 Facebook 通知程式"
+
+#: ../data/wallbox.ui:95
+msgid "notification numbers: "
+msgstr "通知數量："
+
+#: ../data/wallbox.ui:101
+msgid "refresh interval (sec):"
+msgstr "更新頻率 (秒)"
+
+#: ../data/wizard.ui:7
+msgid "First run wizard"
+msgstr "初始化精靈"
+
+#: ../data/wizard.ui:36
+msgid ""
+"welcome to <b>wallbox</b> facebook notification. you need active application and get extra permession for <b>wallbox</b>.\n"
+"\n"
+"please press Forward to active application.\n"
+msgstr ""
+"歡迎使用 <b>wallbox</b> Facebook 通知程式。你需要在 Facebook 上啟用 <b>wallbox</b> 並且取得對應的權限。\n"
+"\n"
+"請按下『向後』 (Forward) 啟用程式。\n"
+
+#: ../data/wizard.ui:45
+msgid "Welcome"
+msgstr "歡迎"
+
+#: ../data/wizard.ui:56
+msgid "before use wallbox, you need active wallbox in your facebook account. please press <b>Active wallbox</b> to get session code in browser."
+msgstr "使用 wallbox 前，你需要在 Facebook 上啟用本程式。請按下 <b>啟用 wallbox</b> 在 Facebook 網站中取得認証碼。"
+
+#: ../data/wizard.ui:69
+msgid "Active wallbox"
+msgstr "啟用 wallbox"
+
+#: ../data/wizard.ui:90
+msgid "please fill session code on below text field and press continue.\t"
+msgstr "請在下面的文字欄位中填入啟用碼並且按下『繼續』。\t"
+
+#: ../data/wizard.ui:115
+msgid "continue"
+msgstr "繼續"
+
+#: ../data/wizard.ui:135
+msgid "Active Application"
+msgstr "啟用程式"
+
+#: ../data/wizard.ui:145
+msgid ""
+"wallbox need to get extra permession to post comment. please press <b>get extra permession</b>.\n"
+"\n"
+"after get extra permession on facebook, please press Forward."
+msgstr ""
+"使用 Wallbox 張貼訊息需要相對應的權限。請按下 <b>取得權限</b>在 Facebook 網站中取得相對應的權限。\n"
+"\n"
+"當你在 Facebook 網站中取得相對應的權限後，按下『向後』繼續。"
+
+#: ../data/wizard.ui:160
+msgid "get extra permession"
+msgstr "取得相對應的權限"
+
+#: ../data/wizard.ui:180
+msgid "Get Extra Permession"
+msgstr "取得相對應的權限"
+
+#: ../data/wizard.ui:191
+msgid "All prepare work finish! please Finish to use wallbox"
+msgstr "所有的準備工作都已經就緒！按下『完成』開始使用 wallbox。"
+
+#: ../data/wizard.ui:200
+msgid "Finish"
+msgstr "結束"
+

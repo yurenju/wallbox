@@ -3,12 +3,12 @@ Encoding=UTF-8
 Version=@VERSION@
 Name=wallbox
 Comment=facebook notification for linux
-Exec=wallbox
-Categories=Application
+Exec=wallbox-applet
+Categories=Network;
 Icon=wallbox32
 Type=Application
-Terminal=true
+Terminal=false
 URL=
-StartupNotify=true
+StartupNotify=false
 
 

@@ -8,11 +8,22 @@ import logging
 import pickle
 import os
 import facebook
+import gettext, locale
 
 logging.basicConfig (level=defs.log_level)
 cache_attributes = \
     ["current_status", "notification", "status", \
     "user_ids", "users", "app_ids", "applications"]
+
+def gettext_init ():
+    locale_dir = os.path.abspath(os.path.join(defs.DATA_DIR, "locale"))
+    for module in (gettext, locale):
+        module.bindtextdomain('wallbox', locale_dir)
+        module.textdomain('wallbox')
+
+        if hasattr(module, 'bind_textdomain_codeset'):
+            module.bind_textdomain_codeset('wallbox','UTF-8')
+    return gettext.gettext
 
 def set_scollbar_height (window, treeview, scrollbar):
     (width, height) = window.get_size ()

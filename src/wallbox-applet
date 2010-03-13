@@ -1,17 +1,8 @@
 #!/usr/bin/env python
 
-from wallbox import wallbox
-from wallbox import defs
-import gettext, locale
+from wallbox import wallbox, defs, utils
 import os.path
 
 if __name__ == "__main__":
-    locale_dir = os.path.abspath(os.path.join(defs.DATA_DIR, "locale"))
-    for module in (gettext, locale):
-        module.bindtextdomain('wallbox', locale_dir)
-        module.textdomain('wallbox')
-
-        if hasattr(module, 'bind_textdomain_codeset'):
-            module.bind_textdomain_codeset('wallbox','UTF-8')
-
+    utils.gettext_init ()
     wallbox.run_wallbox ()

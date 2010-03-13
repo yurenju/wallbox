@@ -1,0 +1,148 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-03-13 17:00+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../data/comment.ui.h:1 ../data/notification.ui.h:1
+msgid "Share"
+msgstr ""
+
+#: ../data/comment.ui.h:2
+msgid "label"
+msgstr ""
+
+#: ../data/notification.ui.h:2
+msgid "refresh"
+msgstr ""
+
+#: ../data/wallbox.ui.h:1
+msgid "About"
+msgstr ""
+
+#: ../data/wallbox.ui.h:2
+msgid "Facebook notification for Linux"
+msgstr ""
+
+#: ../data/wallbox.ui.h:3
+msgid "Login again"
+msgstr ""
+
+#: ../data/wallbox.ui.h:4
+msgid "Quit"
+msgstr ""
+
+#: ../data/wallbox.ui.h:5
+msgid "Setting"
+msgstr ""
+
+#: ../data/wallbox.ui.h:6
+msgid "Show notification"
+msgstr ""
+
+#: ../data/wallbox.ui.h:7
+msgid "notification numbers: "
+msgstr ""
+
+#: ../data/wallbox.ui.h:8
+msgid "refresh interval (sec):"
+msgstr ""
+
+#: ../data/wizard.ui.h:1
+msgid "Active Application"
+msgstr ""
+
+#: ../data/wizard.ui.h:2
+msgid "Active wallbox"
+msgstr ""
+
+#: ../data/wizard.ui.h:3
+msgid "All prepare work finish! please Finish to use wallbox"
+msgstr ""
+
+#: ../data/wizard.ui.h:4
+msgid "Finish"
+msgstr ""
+
+#: ../data/wizard.ui.h:5
+msgid "First run wizard"
+msgstr ""
+
+#: ../data/wizard.ui.h:6
+msgid "Get Extra Permession"
+msgstr ""
+
+#: ../data/wizard.ui.h:7
+msgid "Welcome"
+msgstr ""
+
+#: ../data/wizard.ui.h:8
+msgid ""
+"before use wallbox, you need active wallbox in your facebook account. please "
+"press <b>Active wallbox</b> to get session code in browser."
+msgstr ""
+
+#: ../data/wizard.ui.h:9
+msgid "continue"
+msgstr ""
+
+#: ../data/wizard.ui.h:10
+msgid "get extra permession"
+msgstr ""
+
+#: ../data/wizard.ui.h:11
+msgid "please fill session code on below text field and press continue.\t"
+msgstr ""
+
+#: ../data/wizard.ui.h:12
+msgid ""
+"wallbox need to get extra permession to post comment. please press <b>get "
+"extra permession</b>.\n"
+"\n"
+"after get extra permession on facebook, please press Forward."
+msgstr ""
+
+#: ../data/wizard.ui.h:15
+msgid ""
+"welcome to <b>wallbox</b> facebook notification. you need active application "
+"and get extra permession for <b>wallbox</b>.\n"
+"\n"
+"please press Forward to active application.\n"
+msgstr ""
+
+#: ../src/wallbox/notification.py:138
+msgid "getting current status"
+msgstr ""
+
+#: ../src/wallbox/notification.py:140
+msgid "getting notifications"
+msgstr ""
+
+#: ../src/wallbox/notification.py:143
+msgid "downloading users icon"
+msgstr ""
+
+#: ../src/wallbox/notification.py:146
+msgid "downloading apps icon"
+msgstr ""
+
+#. refresh
+#: ../src/wallbox/notification.py:156
+msgid "Refreshing...."
+msgstr ""
+
+#: ../src/wallbox/notification.py:161
+msgid "Refresh"
+msgstr ""

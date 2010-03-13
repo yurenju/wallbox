@@ -135,15 +135,15 @@ class Notification (gobject.GObject):
 
     def on_refresh_status_changed (self, status):
         if status == defs.REFRESH_START:
-            self.progressbar_refresh.set_text ("getting current status")
+            self.progressbar_refresh.set_text (_("getting current status"))
         if status == defs.CURRENT_STATUS_COMPLETED:
-            self.progressbar_refresh.set_text ("getting notifications")
+            self.progressbar_refresh.set_text (_("getting notifications"))
             self.refresh_current_status ()
         if status == defs.NOTIFICATION_COMMENTS_COMPLETED:
-            self.progressbar_refresh.set_text ("downloading users icon")
+            self.progressbar_refresh.set_text (_("downloading users icon"))
             self.refresh_notification_comments ()
         if status == defs.USERS_ICON_COMPLETED:
-            self.progressbar_refresh.set_text ("downloading apps icon")
+            self.progressbar_refresh.set_text (_("downloading apps icon"))
             self.refresh_users_icon ()
         if status == defs.APPS_ICON_COMPLETED:
             self.progressbar_refresh.set_text ("")
@@ -158,7 +158,7 @@ class Notification (gobject.GObject):
             self.refresh_handler_id = gobject.timeout_add (150, self._refresh_animation)
         else:
             self.view_refresh ()
-            link_refresh.set_label ("Refresh")
+            link_refresh.set_label (_("Refresh"))
             self.progressbar_refresh.hide ()
             gobject.source_remove (self.refresh_handler_id)
             self.refresh_handler_id = None

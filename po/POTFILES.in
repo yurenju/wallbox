@@ -4,3 +4,4 @@
 [type: gettext/glade]data/notification.ui
 [type: gettext/glade]data/wallbox.ui
 [type: gettext/glade]data/wizard.ui
+src/wallbox/notification.py

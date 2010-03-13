@@ -16,6 +16,9 @@ import utils
 import webbrowser
 import os
 import cgi
+import gettext
+
+_ = gettext.gettext
 
 class Notification (gobject.GObject):
 
@@ -150,7 +153,7 @@ class Notification (gobject.GObject):
         link_refresh = self.builder.get_object ("link_refresh")
         if status == 1:
             #refresh
-            link_refresh.set_label ("Refreshing....")
+            link_refresh.set_label (_("Refreshing...."))
             self.progressbar_refresh.show ()
             self.refresh_handler_id = gobject.timeout_add (150, self._refresh_animation)
         else:

@@ -47,11 +47,12 @@ PKG_PROG_PKG_CONFIG
 
 
 # i18n
-ALL_LINGUAS="en_US zh_TW"
-AC_SUBST(ALL_LINGUAS)
+AC_SUBST(ACLOCAL_AMFLAGS, "$ACLOCAL_FLAGS -I m4")
+GETTEXT_PACKAGE=wallbox
+AC_SUBST(GETTEXT_PACKAGE)
+AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE", [Gettext package])
 AM_GLIB_GNU_GETTEXT
-AC_DEFINE(GETTEXT_PACKAGE, ["wallbox"], [Package name for gettext])
-
+IT_PROG_INTLTOOL([0.37.1])
 
 desktopentrydir=${datadir}/applications
 AC_SUBST(desktopentrydir)
@@ -67,6 +68,10 @@ AC_SUBST(LIBDIR)
 
 icondir=${datadir}/icons/hicolor/32x32/apps
 AC_SUBST(icondir)
+
+AC_CONFIG_FILES([
+po/Makefile.in
+])
 
 # Output files
 AC_OUTPUT([Makefile

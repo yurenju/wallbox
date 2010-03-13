@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: wallbox 0.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-03-13 17:00+0800\n"
-"PO-Revision-Date: 2010-03-13 17:03+0800\n"
+"PO-Revision-Date: 2010-03-13 17:07+0800\n"
 "Last-Translator: Yuren Ju <yurenju@gmail.com>\n"
 "Language-Team: Yuren Ju <yurenju@gmail.com>\n"
 "MIME-Version: 1.0\n"
@@ -131,7 +131,6 @@ msgid "getting current status"
 msgstr "取得目前狀態"
 
 #: ../src/wallbox/notification.py:140
-#, fuzzy
 msgid "getting notifications"
 msgstr "顯示通知"
 
@@ -149,7 +148,6 @@ msgid "Refreshing...."
 msgstr "更新中…"
 
 #: ../src/wallbox/notification.py:161
-#, fuzzy
 msgid "Refresh"
 msgstr "更新"
 

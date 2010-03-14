@@ -4,6 +4,7 @@ import pygtk
 pygtk.require ("2.0")
 import gtk
 import dbus
+import defs
 
 class Wizard:
     def __init__ (self):

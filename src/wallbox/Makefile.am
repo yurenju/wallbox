@@ -3,7 +3,6 @@ python_PYTHON = \
 	comment.py \
     defs.py \
     notification.py \
-    secert.py \
     utils.py \
     wallbox.py \
     wizard.py \

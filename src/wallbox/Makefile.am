@@ -1,4 +1,5 @@
-python_PYTHON = \
+wallboxdir = $(pyexecdir)/wallbox
+wallbox_PYTHON = \
     __init__.py \
 	comment.py \
     defs.py \

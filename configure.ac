@@ -1,4 +1,7 @@
 AC_PREREQ(2.61)
+AC_CONFIG_MACRO_DIR([m4])
+GNOME_COMMON_INIT
+
 
 # package version number (not shared library version)
 # odd micro numbers indicate in-progress development
@@ -62,6 +65,9 @@ AC_SUBST(DATADIR)
 
 AS_AC_EXPAND(PYEXECDIR, $pyexecdir)
 AC_SUBST(PYEXECDIR)
+
+AS_AC_EXPAND(WALLBOXDIR, $wallboxdir)
+AC_SUBST(WALLBOXDIR)
 
 AS_AC_EXPAND(LIBDIR, $libdir)
 AC_SUBST(LIBDIR)

@@ -24,7 +24,7 @@ import sys
 __author__ = 'Yuren Ju <yurenju@gmail.com>'
 
 GET_ICON_TIMEOUT = 3
-QUERY_TIMEOUT = 5
+QUERY_TIMEOUT = 15
 
 gtk.gdk.threads_init()
 logging.basicConfig (level=defs.log_level)
@@ -112,6 +112,14 @@ class RefreshProcess (threading.Thread):
                 nids_log += "%s, " % n
             logging.debug (nids_log)
 
+    def dict_to_str (self, result):
+        for res in result:
+            print res
+            for k in res:
+                if type (res[k]) != list and type (res[k]) != dict:
+                    res[k] = str (res[k])
+        return result
+
     def _query (self, query_str):
 	logging.debug ("_query: %s" % query_str)
         default_timeout = socket.getdefaulttimeout ()
@@ -121,9 +129,10 @@ class RefreshProcess (threading.Thread):
                 result = self.fb.fql.query (query_str)
                 if result != None:
                     socket.setdefaulttimeout (default_timeout)
+                    result = self.dict_to_str (result)
                     return result
             except:
-                logging.debug ("URLError, Sleep 3 sec")
+                logging.debug ("URLError, Sleep 3 sec: %s" % query_str)
                 time.sleep (3)
         socket.setdefaulttimeout (default_timeout)
         return None
@@ -187,7 +196,7 @@ class RefreshProcess (threading.Thread):
         pattern_id = re.compile ("&id=(\d+)")
 
         matched_ns = [n for n in self.notification \
-            if int (n['app_id']) == 19675640871 or int (n['app_id']) == 2309869772]
+            if n['app_id'] == '19675640871' or n['app_id'] == '2309869772']
 
         if len (matched_ns) == 0:
             return
@@ -343,7 +352,7 @@ class RefreshProcess (threading.Thread):
                             (urlparse.urlsplit (app['icon_url']).path)
             else:
                 icon_name = ""
-            self.applications[int (app['app_id'])] = {'icon_name': icon_name}
+            self.applications[app['app_id']] = {'icon_name': icon_name}
         socket.setdefaulttimeout (default_timeout)
         self.refresh_status["apps_icon"] = True
 
@@ -495,15 +504,15 @@ class PostOffice (dbus.service.Object):
             return {}
         return self.session
 
-    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='ai')
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='', out_signature='as')
     def get_notification_list (self):
-        nlist = [int (n['notification_id']) for n in self.notification]
+        nlist = [n['notification_id'] for n in self.notification]
         return nlist
 
-    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='i', out_signature='a{sv}')
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='a{sv}')
     def get_notification_entry (self, notification_id):
         for n in self.notification:
-            if int (n['notification_id']) == notification_id:
+            if n['notification_id'] == notification_id:
                 return n
         else:
             return {}
@@ -548,7 +557,7 @@ class PostOffice (dbus.service.Object):
         if self.rs.refresh_status["last_notification"] == False:
             return True
 
-        if int (self.last_nid) == int (self.rs.last_nid) and int (self.last_nid) != 0:
+        if self.last_nid == self.rs.last_nid and int (self.last_nid) != 0:
             logging.debug ("self.last_nid == self.rs.last_nid")
             self.status_changed (self.orig_office_status)
             return False
@@ -634,7 +643,7 @@ class PostOffice (dbus.service.Object):
             return {}
         return result
 
-    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='i', out_signature='a{sv}')
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='a{sv}')
     def get_status_with_nid (self, nid):
         logging.debug ("get_status_with_nid: %s" % nid)
         result = None
@@ -653,7 +662,7 @@ class PostOffice (dbus.service.Object):
         return {}
     
 
-    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='x', out_signature='a{sv}')
+    @dbus.service.method ("org.wallbox.PostOfficeInterface", in_signature='s', out_signature='a{sv}')
     def get_application (self, app_id):
         if self.applications.has_key (app_id):
             return self.applications[app_id]

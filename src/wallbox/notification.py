@@ -39,9 +39,10 @@ class Notification (gobject.GObject):
         self.comment_handler_id = None
         self.progressbar_refresh = self.builder.get_object ("progressbar_refresh")
 
-        gobject.signal_new \
-            ("has-unread", Notification, gobject.SIGNAL_RUN_LAST, \
-            gobject.TYPE_NONE, (gobject.TYPE_INT,))
+        if gobject.signal_lookup ("has-unread", Notification) == 0:
+            gobject.signal_new \
+                ("has-unread", Notification, gobject.SIGNAL_RUN_LAST, \
+                gobject.TYPE_NONE, (gobject.TYPE_INT,))
 
         bus = dbus.SessionBus ()
         obj = bus.get_object ("org.wallbox.PostOfficeService", \
@@ -106,11 +107,11 @@ class Notification (gobject.GObject):
                 text = "<b>%s</b>" % text
                 unread_num += 1
 
-            status = self.office.get_status_with_nid (int (entry['notification_id']))
+            status = self.office.get_status_with_nid (entry['notification_id'])
             if len (status) != 0:
                 has_detail = True
             liststore.append \
-                ([entry['app_id'], text, has_detail, int(entry['notification_id'])])
+                ([entry['app_id'], text, has_detail, entry['notification_id']])
 
         if has_unread == True:
             self.emit ("has-unread", unread_num)
@@ -160,7 +161,8 @@ class Notification (gobject.GObject):
             self.view_refresh ()
             link_refresh.set_label (_("Refresh"))
             self.progressbar_refresh.hide ()
-            gobject.source_remove (self.refresh_handler_id)
+            if self.refresh_handler_id != None:
+                gobject.source_remove (self.refresh_handler_id)
             self.refresh_handler_id = None
             (width, height) = self.builder.get_object ("aspectframe").size_request ()
             self.scrolledwindow.set_size_request (-1, utils.get_min_monitor_height() / 3 * 2)
@@ -262,7 +264,7 @@ class Notification (gobject.GObject):
 
     def make_icon (self, column, cell, model, iter):
         app_id = model.get_value (iter, 0)
-        app = self.office.get_application (int(app_id))
+        app = self.office.get_application (app_id)
         icons_dir = self.office.get_app_icons_dir ()
         icon = None
 

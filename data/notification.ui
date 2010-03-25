@@ -11,7 +11,7 @@
       <!-- column-name has_detail -->
       <column type="gboolean"/>
       <!-- column-name notification_id -->
-      <column type="gint"/>
+      <column type="gchararray"/>
     </columns>
   </object>
   <object class="GtkWindow" id="notification_window">
